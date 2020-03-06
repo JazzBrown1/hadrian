@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate } from 'jazzy-authenticate';
+import { authenticate } from 'hadrian';
 
 // Import authentication model
 import './basic-auth.model';
@@ -20,4 +20,4 @@ app.get('/get-other-info', (req, res) => res.json({ result: req.user.otherInfo }
 app.use('*', (req, res) => res.json({ error: 'unknown request' }));
 
 // listen for requests on port 3001 always use https in production
-app.listen(3001);
+app.listen(3040);

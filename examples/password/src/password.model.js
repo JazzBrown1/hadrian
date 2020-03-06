@@ -1,5 +1,5 @@
 
-import { defineModel } from 'jazzy-authenticate';
+import { defineModel } from 'hadrian';
 import { findUserByUserName } from './db';
 
 defineModel(

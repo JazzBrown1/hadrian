@@ -1,5 +1,5 @@
 {
-  "name": "jazzy-authenticate-password-login-example",
+  "name": "hadrian-password-login-example",
   "version": "0.1.0",
   "description": "Password login example. Authentication middleware for ExpressJs",
   "main": "dist/index.js",
@@ -21,6 +21,6 @@
     "ejs": "^3.0.1",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
-    "jazzy-authenticate": "file:../.."
+    "hadrian": "file:../.."
   }
 }

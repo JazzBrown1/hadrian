@@ -1,5 +1,5 @@
 {
-  "name": "jazzy-authenticate-basic-auth-example",
+  "name": "hadrian-basic-auth-example",
   "version": "0.1.0",
   "description": "Basic Auth example. Authentication middleware for Express.js",
   "main": "dist/index.js",
@@ -19,6 +19,6 @@
   },
   "dependencies": {
     "express": "^4.17.1",
-    "jazzy-authenticate": "file:../.."
+    "hadrian": "file:../.."
   }
 }

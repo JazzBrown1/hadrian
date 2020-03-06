@@ -1,8 +1,8 @@
 
-import { defineModel } from 'jazzy-authenticate';
+import { defineModel } from 'hadrian';
 import { findUserByUserName, insertUser, findUserById } from './db';
 
-import pw from './jazzy-password';
+import pw from './password-hasher';
 
 const serialize = (user, done) => done(null, user.id);
 

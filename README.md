@@ -8,11 +8,9 @@
 
 Hadrian is a flexible and dynamic authentication middleware for express.js. It has been designed to be easy to use, modular, unopinionated and take the complexities out of building authentication into server apps.
 
-While Hadrian aims to simplify and speed up the process of adding authentication layers to express.js apps, it also leaves all of the underlying logic up to the developer, allowing bespoke authentication models to be easily built without hacking the library or using workarounds.
-
+While hadrian aims to simplify and speed up the process of adding authentication layers to express apps, it also leaves all of the underlying logic up to the developer, allowing bespoke authentication models to be easily built without hacking the library or using workarounds.
 
 ## Installation
-
 
 Ensure you have installed Express.js
 
@@ -27,7 +25,6 @@ $ npm install hadrian
 ```
 
 ## Usage
-
 
 Use the defineModel function to define an Authentication Model.
 
@@ -96,7 +93,6 @@ Use the authenticate() middleware to authenticate a client.
 app.use('/login', checkUnauthenticated(), authenticate(), (req, res) => {
   res.redirect('/home');
 });
-
 ```
 
 You can block routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
@@ -130,11 +126,9 @@ app.post(
     res.redirect('home');
   }
 );
-
 ```
 
 _For working examples and usage, please refer to the [examples section on project Github](https://github.com/JazzBrown1/hadrian/tree/master/examples/)_
-
 
 ## Meta
 

@@ -1,4 +1,4 @@
-import { defineModel } from 'jazzy-authenticate';
+import { defineModel } from 'hadrian';
 import { findClientById } from './db';
 
 defineModel('basic_auth', {

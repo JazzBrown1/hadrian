@@ -1,19 +1,19 @@
-# Jazzy Authenticate - Basic Authentication Example
+# Hadrian - Basic Authentication Example
 > Fast and versatile authentication middleware for ExpressJs.
 
 Cml
 
 ```sh
-$ git clone https://github.com/JazzBrown1/jazzy-authenticate.git
+$ git clone https://github.com/JazzBrown1/hadrian.git
 
-$ cd jazzy-authenticate/examples/basicAuth
+$ cd hadrian/examples/basicAuth
 
 $ npm install
 
 $ npm start
 ```
 
-Send some GET requests to http://localhost:3001/get-some-info and http://localhost:3001/get-other-info. Postman is a good tool for this!
+Send some GET requests to http://localhost:3040/get-some-info and http://localhost:3040/get-other-info. Postman is a good tool for this!
 
 ```sh
 username: user,

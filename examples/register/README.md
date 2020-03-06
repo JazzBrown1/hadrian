@@ -1,12 +1,12 @@
-# Jazzy Authenticate - Register Example
+# Hadrian - Register Example
 > Fast and versatile authentication middleware for ExpressJs.
 
 Cml
 
 ```sh
-$ git clone https://github.com/JazzBrown1/jazzy-authenticate.git
+$ git clone https://github.com/JazzBrown1/hadrian.git
 
-$ cd jazzy-authenticate/examples/register
+$ cd hadrian/examples/register
 
 $ npm install
 

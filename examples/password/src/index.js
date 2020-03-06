@@ -3,7 +3,7 @@ import session from 'express-session';
 
 import {
   authenticate, checkAuthenticated, checkUnauthenticated, init, logout
-} from 'jazzy-authenticate';
+} from 'hadrian';
 
 import './password.model';
 
@@ -25,7 +25,7 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-// Initiate jazzy authenticate on the request
+// Initiate hadrian on the request
 app.use(init());
 
 // render home page if logged in
@@ -55,4 +55,4 @@ app.get('/api/getDate', checkAuthenticated({
 });
 
 // listen for requests on port 3001 always use https in production
-app.listen(3001);
+app.listen(3030);

@@ -3,7 +3,7 @@ import session from 'express-session';
 import path from 'path';
 import {
   authenticate, checkAuthenticated, checkUnauthenticated, init, logout
-} from 'jazzy-authenticate';
+} from 'hadrian';
 
 import './models';
 
@@ -27,7 +27,7 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-// Initiate jazzy authenticate on the request
+// Initiate hadrian on the request
 app.use(init());
 
 // render home page if logged in
