@@ -146,7 +146,7 @@ Distributed under the MIT license. See ``LICENSE`` for more information.
 4. Push to the branch (`git push origin feature/fooBar`)
 5. Create a new Pull Request
 
-<!-- Markdown link & img dfn's -->
+<!-- Markdown link & img urls -->
 [npm-version]: https://img.shields.io/npm/v/hadrian
 [npm-dependencies]: https://img.shields.io/david/jazzbrown1/hadrian
 [npm-downloads]: https://img.shields.io/npm/dm/hadrian
