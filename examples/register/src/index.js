@@ -45,21 +45,22 @@ app.get('/logout', checkAuthenticated(), logout());
 // if logged out authenticate the user and login
 app.post('/login', checkUnauthenticated(), authenticate());
 
-// if logged out register user and login
+// if logged out register user using authenticate('password_register') and login
 app.post('/register', checkUnauthenticated(), authenticate('password_register'));
 
 // Use overrides when you want different fail and success responses for example this endpoint
 // sends a json response
 app.get('/api/getDate', checkAuthenticated({
-  onFail: { json: { error: 'You must be logged in to get the date' } }
-}), (req, res) => {
-  res.json({ date: new Date() });
-});
+  onFail: { json: { error: 'You must be logged in to get the date' } },
+  onSuccess: (req, res) => res.json({ date: new Date() })
+}));
 
 // listen for requests
 app.listen(port, () => {
+  // eslint-disable-next-line no-console
   console.log(`Server successfully started on port ${port}`);
 }).on('error', (error) => {
+  // eslint-disable-next-line no-console
   console.log('Error on server startup');
   throw error;
 });

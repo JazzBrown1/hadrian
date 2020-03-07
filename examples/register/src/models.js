@@ -1,8 +1,10 @@
 
 import { defineModel } from 'hadrian';
+import hashPassword from 'hash-password';
 import { findUserByUserName, insertUser, findUserById } from './db';
 
-import pw from './password-hasher';
+// Use hash-password to hash and salt passwords before saving to db
+const pw = hashPassword();
 
 const serialize = (user, done) => done(null, user.id);
 
@@ -16,7 +18,7 @@ defineModel(
     verify: (query, user, done) => {
       done(
         null,
-        pw.check(query.password, user.password)
+        pw.validate(query.password, user.password)
       );
     },
     serialize,
@@ -25,7 +27,7 @@ defineModel(
     authenticateOnFail: (req, res) => res.render('login', { error: 'Password or username did not match! Try again' }),
     authenticateOnSuccess: (req, res) => res.render('success', { message: 'Log in successful', user: req.user }),
     logoutOnSuccess: { redirect: '/login' },
-    checkAuthenticatedOnFail: (req, res) => res.redirect('/login'),
+    checkAuthenticatedOnFail: { redirect: '/login' },
     checkUnauthenticatedOnFail: { redirect: '/' }
   },
   true // Set as default <optional> defaults to false
@@ -36,13 +38,20 @@ defineModel('password_register', {
   deserializeTactic: 'always',
   extract: (req, done) => {
     const query = req.body;
+    // perform validation in the extract function
     if (typeof query.username !== 'string' || query.username.length === 0) {
       return done(null, false, 'You must specify a username');
+    }
+    if (typeof query.password !== 'string' || query.password.length === 0) {
+      return done(null, false, 'You must specify a password');
+    }
+    if (query.username === query.password) {
+      return done(null, false, 'Your username cannot be the same as your password');
     }
     done(null, query);
   },
   getUser: (query, done) => {
-    const password = pw.hash(query.password);
+    const password = pw.generate(query.password);
     insertUser(query.username, password, (err, insertedUser) => {
       if (err) return done(err);
       if (!insertedUser) return done(null, false, 'username already registered');
