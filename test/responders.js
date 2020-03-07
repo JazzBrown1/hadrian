@@ -1,9 +1,10 @@
 var shortid = require('shortid');
+const assert = require('assert');
 const expressChain = require('./expressChain');
 var { defineModel, checkAuthenticated } = require('../dist/hadrian');
 
 describe('responders', function () {
-  it('should call res.send and checkAuthenticatedOnSuccess send response set when authenticated', function (done) {
+  it('calls res.send when send prop passed to responder', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -21,7 +22,26 @@ describe('responders', function () {
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
 
-  it('should call res.json and checkAuthenticatedOnSuccess send response set when authenticated', function (done) {
+  it('calls res.status().send() when send is passed to responder', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: true,
+        auth: {
+          someprop: 'value'
+        }
+      }
+    };
+    const res = {
+      status: (code) => ({
+        send: (send) => done(assert.equal(send, 'send') && assert.equal(code, 999))
+      })
+    };
+    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { status: 999, send: 'send' } });
+    expressChain(checkAuthenticated(modelName))(req, res, done);
+  });
+  it('calls res.json when json prop passed to responder', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -38,7 +58,26 @@ describe('responders', function () {
     defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { json: { test: 'test' } } });
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
-  it('calls res.sendStatus and sendStatus send response set when authenticated', function (done) {
+  it('calls res.status().json() when json is passed to responder', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: true,
+        auth: {
+          someprop: 'value'
+        }
+      }
+    };
+    const res = {
+      status: (code) => ({
+        json: (json) => done(assert.deepEqual(json, { page: 'page' }) && assert.equal(code, 999))
+      })
+    };
+    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { status: 999, json: { page: 'page' } } });
+    expressChain(checkAuthenticated(modelName))(req, res, done);
+  });
+  it('calls res.sendStatus when sendStatus prop passed to responder', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -55,7 +94,7 @@ describe('responders', function () {
     defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { sendStatus: 200 } });
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
-  it('calls res.sendStatus and sendStatus status response set when authenticated', function (done) {
+  it('calls res.sendStatus when only the status prop passed to responder', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -72,7 +111,7 @@ describe('responders', function () {
     defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { status: 200 } });
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
-  it('calls res.redirect and sendStatus status response set when authenticated', function (done) {
+  it('calls res.redirect when redirect prop passed to responder', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -89,6 +128,82 @@ describe('responders', function () {
     defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { redirect: 200 } });
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
+  it('calls res.status().redirect() when redirect is passed to responder', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: true,
+        auth: {
+          someprop: 'value'
+        }
+      }
+    };
+    const res = {
+      status: (code) => ({
+        redirect: (redirect) => done(assert.equal(redirect, 'page') && assert.equal(code, 999))
+      })
+    };
+    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { status: 999, redirect: 'page' } });
+    expressChain(checkAuthenticated(modelName))(req, res, done);
+  });
+  it('calls res.render when render is passed to responder', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: true,
+        auth: {
+          someprop: 'value'
+        }
+      }
+    };
+    const data = { some: 'data' };
+    const res = {
+      render: (view, data2) => done(assert.equal(view, 'page') && assert.deepEqual(data, data2))
+    };
+    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { render: 'page', renderData: data } });
+    expressChain(checkAuthenticated(modelName))(req, res, done);
+  });
+  it('calls res.render when render is passed to responder and renderData not set', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: true,
+        auth: {
+          someprop: 'value'
+        }
+      }
+    };
+    const res = {
+      render: (view, data2) => done(assert.equal(view, 'page') && assert.deepEqual({}, data2))
+    };
+    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { render: 'page' } });
+    expressChain(checkAuthenticated(modelName))(req, res, done);
+  });
+  it('calls res.status().render() when redirect render passed to responder', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: true,
+        auth: {
+          someprop: 'value'
+        }
+      }
+    };
+    const data = { some: 'data' };
+    const res = {
+      status: (code) => ({
+        render: (view, data2) => done(assert.equal(view, 'page') && assert.equal(code, 999) && assert.deepEqual(data, data2))
+      })
+    };
+    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { status: 999, render: 'page', renderData: data } });
+    expressChain(checkAuthenticated(modelName))(req, res, done);
+  });
+
+
   it('throws an error if non object or function is set', function (done) {
     const modelName = shortid.generate();
     try {
