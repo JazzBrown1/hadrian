@@ -3,7 +3,7 @@ var assert = require('assert');
 var shortid = require('shortid');
 var {
   defineModel, authenticate, init
-} = require('../dist/hadrian');
+} = require('../');
 
 // completely inefficient helper function for testing
 const expressChain = require('./expressChain');

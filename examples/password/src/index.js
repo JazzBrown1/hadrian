@@ -25,7 +25,7 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-// Initiate hadrian on the request
+// Initialize hadrian on the request
 app.use(init());
 
 // render home page if logged in

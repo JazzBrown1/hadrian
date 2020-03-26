@@ -5,7 +5,7 @@ const expressChain = require('./expressChain');
 
 var {
   defineModel, init, authenticate, checkAuthenticated, deserializeUser
-} = require('../dist/hadrian');
+} = require('../');
 
 
 describe('never deserialize tactic', function () {
@@ -185,7 +185,7 @@ describe('never deserialize tactic', function () {
         });
       });
     });
-    it('passes to next mw when user is not authed', function (done) {
+    it('passes to next mw when user is not authenticated', function (done) {
       const modelName = shortid.generate();
       const request = {
         body: {},

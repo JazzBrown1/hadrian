@@ -1,6 +1,6 @@
 var shortid = require('shortid');
 const expressChain = require('./expressChain');
-var { defineModel, checkAuthenticated } = require('../dist/hadrian');
+var { defineModel, checkAuthenticated } = require('../');
 
 describe('checkAuthenticated()', function () {
   it('should call next when authenticated', function (done) {
@@ -10,7 +10,7 @@ describe('checkAuthenticated()', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };

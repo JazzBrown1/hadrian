@@ -1,5 +1,5 @@
 var shortid = require('shortid');
-var { defineModel, init } = require('../dist/hadrian');
+var { defineModel, init } = require('../');
 const expressChain = require('./expressChain');
 
 describe('init()', function () {

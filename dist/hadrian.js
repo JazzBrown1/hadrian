@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const makeDefaults = () => ({
-  name: 'Model',
+  name: 'default',
   useSessions: false,
   deserializeTactic: 'always',
   extract: 'body',
@@ -333,7 +333,7 @@ exports.checkUnauthenticated = checkUnauthenticated;
 exports.defineModel = defineModel;
 exports.deserializeUser = deserializeUser;
 exports.init = init;
-exports.initiate = init;
+exports.initialize = init;
 exports.logout = logout;
 exports.models = models;
 exports.modifyModel = modifyModel;
