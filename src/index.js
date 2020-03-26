@@ -16,7 +16,7 @@ export {
   authenticate,
   logout,
   init,
-  init as initiate,
+  init as initialize,
   deserializeUser,
   checkAuthenticated,
   checkUnauthenticated,

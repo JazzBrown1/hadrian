@@ -1,5 +1,5 @@
 const makeDefaults = () => ({
-  name: 'Model',
+  name: 'default',
   useSessions: false,
   deserializeTactic: 'always',
   extract: 'body',

@@ -1,7 +1,7 @@
 
 var assert = require('assert');
 var shortid = require('shortid');
-var { defineModel, models, modifyModel } = require('../dist/hadrian');
+var { defineModel, models, modifyModel } = require('../');
 
 describe('modifyModel()', function () {
   it('modifies included options of set model', function () {

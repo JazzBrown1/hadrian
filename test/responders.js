@@ -1,7 +1,7 @@
 var shortid = require('shortid');
 const assert = require('assert');
 const expressChain = require('./expressChain');
-var { defineModel, checkAuthenticated } = require('../dist/hadrian');
+var { defineModel, checkAuthenticated } = require('../');
 
 describe('responders', function () {
   it('calls res.send when send prop passed to responder', function (done) {
@@ -11,7 +11,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -29,7 +29,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -48,7 +48,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -65,7 +65,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -84,14 +84,17 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
     const res = {
       sendStatus: () => done()
     };
-    defineModel(modelName, { useSessions: false, checkAuthenticatedOnSuccess: { sendStatus: 200 } });
+    defineModel(
+      modelName,
+      { useSessions: false, checkAuthenticatedOnSuccess: { sendStatus: 200 } }
+    );
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
   it('calls res.sendStatus when only the status prop passed to responder', function (done) {
@@ -101,7 +104,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -118,7 +121,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -135,7 +138,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -154,7 +157,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -172,7 +175,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -189,7 +192,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };

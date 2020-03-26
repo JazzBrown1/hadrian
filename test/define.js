@@ -1,16 +1,16 @@
 
 var assert = require('assert');
 var shortid = require('shortid');
-var { defineModel, models } = require('../dist/hadrian');
+var { defineModel, models } = require('../');
 
 describe('defineModel()', function () {
-  it('should save defineModeld model into models object', function () {
+  it('should save define Model and store into models object', function () {
     const modelName = shortid.generate();
     defineModel(modelName, { clientType: 'test' });
     assert.equal(models[modelName].name, modelName);
     assert.equal(models[modelName].clientType, 'test');
   });
-  it('should save defineModeld model into models object with isDefault set true', function () {
+  it('should save model into models object with isDefault set true', function () {
     const modelName = shortid.generate();
     defineModel(modelName, { clientType: 'test' }, true);
     assert.equal(models[modelName].name, modelName);

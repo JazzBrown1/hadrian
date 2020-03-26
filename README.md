@@ -8,7 +8,7 @@
 
 Hadrian is a flexible and dynamic authentication middleware for express.js. It has been designed to be easy to use, modular, unopinionated and take the complexities out of building authentication into server apps.
 
-While hadrian aims to simplify and speed up the process of adding authentication layers to express apps, it also leaves all of the underlying logic up to the developer, allowing bespoke authentication models to be easily built without hacking the library or using workarounds.
+Hadrian speeds up and simplifies the process of adding authentication layers to express apps; by allowing you to declare authentication model in a friendly schema, you can quickly add or improve authentication in your app.
 
 ## Installation
 
@@ -33,6 +33,7 @@ defineModel(
   'password',
   {
     extract: 'body',
+    useSessions: true,
     getUser: (query, done) => db.findUserByUsername(query.username, done),
     verify: (query, user, done) => done(null, query.password === user.password)
   },
@@ -40,22 +41,23 @@ defineModel(
 );
 ```
 
-The first argument is the model name. The second the model options. And the third option is whether to set this model to default (meaning it will not have to be referenced in the middleware). If the third argument is ommiad it defaults to false.
+The first argument is the model name. The second the model options. And the third argument is whether to set this model to default (meaning it will not have to be referenced in the middleware). If the third argument is ommiad it defaults to false.
 
 Authentication Model Defaults:
 
 ```sh
 {
-  name: 'Model',
-  useSessions: true,
+  // Authentication Logic
+  useSessions: false,
   deserializeTactic: 'always',
-  extract: 'body',
-  clientType: 'user',
   selfInit: false,
-  getUser: (query, done) => done(null, {}),
-  verify: (query, user, done) => done(null, true),
+  clientType: 'client',
+  extract: 'body',
+  getUser: (extract, done) => done(null, {}),
+  verify: (extract, user, done) => done(null, true),
   serialize: (user, done) => done(null, user),
   deserialize: (user, done) => done(null, user),
+  // Response Logic
   initOnError: { status: 500 },
   initOnSuccess: null,
   authenticateOnError: { status: 500 },
@@ -67,11 +69,11 @@ Authentication Model Defaults:
   checkUnauthenticatedOnSuccess: null,
   logoutOnSuccess: null,
   deserializeUserOnError: { status: 500 },
-  deserializeUserOnSuccess: null,
+  deserializeUserOnSuccess: null
 }
 ```
 
-The init() middleware must be called at the start of the request straight after the session and parsing middleware.
+The init() middleware must be called if at the start of the request straight after any session and parsing middleware.
 
 ```sh
 app.use(json({ extended: false }));
@@ -93,6 +95,10 @@ Use the authenticate() middleware to authenticate a client.
 app.use('/login', checkUnauthenticated(), authenticate(), (req, res) => {
   res.redirect('/home');
 });
+
+// Or pass the onSuccess response in the authentication middleware options
+
+app.use('/login', checkUnauthenticated(), authenticate({ onSuccess: { redirect: '/home' } }));
 ```
 
 You can block routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
@@ -107,7 +113,8 @@ Sometimes you may need different fail, error or success responses to those set i
 const overrides = {
   onFail: { json: { error: 'You must be logged in to get the date' } },
   onError: { json: { error: 'Internal server error' } },
-}
+};
+
 app.get('/api/private/', checkAuthenticated(overrides), privateApiRoutes);
 ```
 

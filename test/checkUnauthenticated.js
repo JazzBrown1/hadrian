@@ -1,6 +1,6 @@
 var shortid = require('shortid');
 const expressChain = require('./expressChain');
-var { defineModel, checkUnauthenticated } = require('../dist/hadrian');
+var { defineModel, checkUnauthenticated } = require('../');
 
 describe('checkUnauthenticated()', function () {
   it('should call next when not authenticated', function (done) {
@@ -22,7 +22,7 @@ describe('checkUnauthenticated()', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
@@ -53,7 +53,7 @@ describe('checkUnauthenticated()', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someprop: 'value'
+          someProp: 'value'
         }
       }
     };
