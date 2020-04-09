@@ -41,7 +41,7 @@ defineModel(
 );
 ```
 
-The first argument is the model name. The second the model options. And the third argument is whether to set this model to default (meaning it will not have to be referenced in the middleware). If the third argument is ommiad it defaults to false.
+The first argument is the model name. The second the model options. And the third argument is whether to set this model to default (meaning it will not have to be referenced in the middleware). If the third argument is omitted it defaults to false.
 
 Authentication Model Defaults:
 
