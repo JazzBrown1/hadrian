@@ -1,6 +1,6 @@
 {
   "name": "hadrian",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Authentication middleware for Express.js",
   "main": "dist/hadrian.js",
   "entry": "dist/hadrian.js",
