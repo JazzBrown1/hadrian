@@ -30,11 +30,11 @@ app.use(init());
 
 // render home page if logged in
 app.get('/', checkAuthenticated(), (req, res) => {
-  // Manual deserialize tactic
-  req.user((err, user) => {
-    if (err) res.sendStatus(500);
+  const run = async () => {
+    const user = await req.user();
     res.render('home', { user });
-  });
+  }
+  run();
 });
 
 // render login page if not logged in

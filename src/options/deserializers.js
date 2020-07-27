@@ -1,20 +1,18 @@
-const manualDeserializeInit = (serializedUser, deserialize, done) => {
-  done(null, function getUser(cb) {
-    if (this.deserializedUser) return cb(null, this.deserializedUser);
-    deserialize(this.hadrian.user, (err, deserializedUser2) => {
-      this.deserializedUser = deserializedUser2;
-      cb(err, deserializedUser2);
-    });
-  });
+const manualDeserializeInit = async (s, deserialize) => async function getUser() {
+  if (this.deserializedUser) return this.deserializedUser;
+  const deserializedUser = deserialize(this.hadrian.user);
+  this.deserializedUser = deserializedUser;
+  return deserializedUser;
 };
 
-const manualDeserializeAuth = () => function getUser(cb) { cb(null, this.deserializedUser); };
+const manualDeserializeAuth = () => function getUser() {
+  return Promise.resolve(this.deserializedUser);
+};
 
-const alwaysDeserializeInit = (serializedUser, deserialize, done, req) => {
-  deserialize(serializedUser, (err, user) => {
-    req.deserializedUser = user;
-    done(err, user);
-  });
+const alwaysDeserializeInit = async (serializedUser, deserialize, req) => {
+  const user = await deserialize(serializedUser);
+  req.deserializedUser = user;
+  return user;
 };
 
 const alwaysDeserializeAuth = (deserializedUser) => deserializedUser;

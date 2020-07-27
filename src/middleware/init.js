@@ -34,11 +34,10 @@ const init = (modelName, overrides) => {
       req.hadrian = req.session.hadrian;
       req.deserializedUser = null;
       if (req.hadrian.user) {
-        deserializer(req.hadrian.user, deserialize, (err, user) => {
-          if (err) onError(req, res, err, next);
+        deserializer(req.hadrian.user, deserialize, req).then((user) => {
           req.user = user;
           next();
-        }, req);
+        }).catch((err) => { onError(req, res, next, err); });
       } else next();
     } else {
       req.hadrian = { isAuthenticated: false, auth: {} };

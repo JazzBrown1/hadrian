@@ -4,9 +4,8 @@ const users = {
   dave: { username: 'dave', password: 'password' }
 };
 
-const findUserByUserName = (username, cb) => {
-  if (!users[username]) return cb(null, null);
-  cb(null, users[username]);
-};
+const findUserByUserName = (username) => new Promise((resolve) => {
+  setTimeout(() => resolve(users[username] || null), 100)
+});
 
 export { users, findUserByUserName };

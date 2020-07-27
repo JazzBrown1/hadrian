@@ -2,11 +2,9 @@ var shortid = require('shortid');
 const assert = require('assert');
 const expressChain = require('./expressChain');
 
-
 var {
   defineModel, init, authenticate, checkAuthenticated, deserializeUser
-} = require('../');
-
+} = require('..');
 
 describe('never deserialize tactic', function () {
   it('updates authentication from cookie on new request', function (done) {
@@ -35,16 +33,16 @@ describe('never deserialize tactic', function () {
       useSessions: true,
       initOnSuccess: null,
       deserializeTactic: 'never',
-      getUser: (q, d) => d(null, 'deserialized'),
-      serialize: (q, d) => d(null, 'deserialized'),
-      deserialize: (q, d) => d(null, 'deserialized')
+      getUser: () => 'deserialized',
+      serialize: () => 'deserialized',
+      deserialize: () => 'deserialized'
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
       expressChain([init(modelName), checkAuthenticated(modelName)])(request, res, (req2) => {
-        req2.user((err, user) => {
+        req2.user().then((user) => {
           assert.equal(user, 'deserialized');
-          req2.user((err2, user2) => {
+          req2.user().then((user2) => {
             done(assert.equal(user2, 'deserialized'));
           });
         });
@@ -62,14 +60,14 @@ describe('never deserialize tactic', function () {
       useSessions: true,
       initOnSuccess: null,
       deserializeTactic: 'never',
-      getUser: (q, d) => d(null, 'user'),
+      getUser: () => 'user',
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
       expressChain([init(modelName), checkAuthenticated(modelName)])(request, res, (req2) => {
-        req2.user((err, user) => {
+        req2.user().then((user) => {
           assert.equal(user, 'user');
-          req2.user((err2, user2) => {
+          req2.user().then((user2) => {
             done(assert.equal(user2, 'user'));
           });
         });
@@ -87,9 +85,9 @@ describe('never deserialize tactic', function () {
       useSessions: true,
       initOnSuccess: null,
       deserializeTactic: 'never',
-      getUser: (q, d) => d(null, 'deserialized'),
-      serialize: (q, d) => d(null, 'deserialized'),
-      deserialize: (q, d) => d(null, 'deserialized')
+      getUser: () => 'deserialized',
+      serialize: () => 'deserialized',
+      deserialize: () => 'deserialized'
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
@@ -114,9 +112,9 @@ describe('never deserialize tactic', function () {
         useSessions: true,
         initOnSuccess: null,
         deserializeTactic: 'never',
-        getUser: (q, d) => d(null, 'deserialized'),
-        serialize: (q, d) => d(null, 'deserialized'),
-        deserialize: (q, d) => d(null, 'deserialized')
+        getUser: () => 'deserialized',
+        serialize: () => 'deserialized',
+        deserialize: () => 'deserialized'
       });
       expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
         const request = { session: req.session };
@@ -140,9 +138,9 @@ describe('never deserialize tactic', function () {
         useSessions: true,
         initOnSuccess: null,
         deserializeTactic: 'never',
-        getUser: (q, d) => d(null, 'deserialized'),
-        serialize: (q, d) => d(null, 'deserialized'),
-        deserialize: (q, d) => d(null, 'deserialized'),
+        getUser: () => 'deserialized',
+        serialize: () => 'deserialized',
+        deserialize: () => 'deserialized',
         deserializeUserOnSuccess: (req) => {
           done(assert.equal(req.deserializedUser, 'deserialized'));
         }
@@ -169,9 +167,9 @@ describe('never deserialize tactic', function () {
         useSessions: true,
         initOnSuccess: null,
         deserializeTactic: 'never',
-        getUser: (q, d) => d(null, 'deserialized'),
-        serialize: (q, d) => d(null, 'deserialized'),
-        deserialize: (q, d) => d('error', 'deserialized'),
+        getUser: () => 'deserialized',
+        serialize: () => 'deserialized',
+        deserialize: () => { throw new Error('error'); },
         deserializeUserOnError: () => done()
       });
       expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
@@ -196,9 +194,9 @@ describe('never deserialize tactic', function () {
         useSessions: true,
         initOnSuccess: null,
         deserializeTactic: 'never',
-        getUser: (q, d) => d(null, 'deserialized'),
-        serialize: (q, d) => d(null, 'serialized'),
-        deserialize: (q, d) => d(null, 'deserialized'),
+        getUser: () => 'deserialized',
+        serialize: () => 'serialized',
+        deserialize: () => 'deserialized',
       });
       expressChain([init(modelName), deserializeUser(modelName)])(request, res, () => {
         done();
@@ -214,9 +212,9 @@ describe('never deserialize tactic', function () {
       defineModel(modelName, {
         useSessions: true,
         deserializeTactic: 'never',
-        getUser: (q, d) => d(null, 'deserialized'),
-        serialize: (q, d) => d(null, 'serialized'),
-        deserialize: (q, d) => d(null, 'deserialized'),
+        getUser: () => 'deserialized',
+        serialize: () => 'serialized',
+        deserialize: () => 'deserialized',
       });
       expressChain([init(modelName), deserializeUser({
         onSuccess: () => done()
@@ -236,12 +234,12 @@ describe('never deserialize tactic', function () {
       useSessions: true,
       initOnSuccess: null,
       deserializeTactic: 'never',
-      getUser: (q, d) => d(null, 'deserialized'),
-      serialize: (q, d) => d(null, 'deserialized'),
-      deserialize: (q, d) => d(null, 'deserialized')
+      getUser: () => 'deserialized',
+      serialize: () => 'deserialized',
+      deserialize: () => 'deserialized'
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
-      req.user((err, user) => {
+      req.user().then((user) => {
         done(assert.equal(user, 'deserialized'));
       });
     });

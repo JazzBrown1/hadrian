@@ -5,6 +5,8 @@ import saveSession from './saveSession';
 import init from './init';
 import { alwaysDeserializeAuth, manualDeserializeAuth } from '../options/deserializers';
 
+const defaultFailed = 'Failed to verify';
+
 const authenticate = (modelName, overrides) => {
   if (typeof modelName === 'object') {
     overrides = modelName;
@@ -20,29 +22,31 @@ const authenticate = (modelName, overrides) => {
   const deserializer = options.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
 
   const authFunction = (req, res, next) => {
-    const run = async () => {
-      const query = await extract(req);
-      const user = await getUser(query, req);
-      const result = await verify(query, user, req);
-      if (!result) return onFail(req, res, next);
-      req.hadrian.auth[name] = {
-        clientType, query, model: name, result
-      };
-      req.hadrian.isAuthenticated = true;
-      req.deserializedUser = user;
-      req.user = deserializer(user, req);
-      next();
-    };
-    run().catch((err) => {
-      if (err.isFail) return onFail(req, res, next, err);
-      onError(req, res, next, err);
+    extract(req, (error0, query, reason) => {
+      if (error0) return onError(req, res, error0);
+      if (!query) return onFail(req, res, reason || defaultFailed);
+      getUser(query, (error1, user, reason1) => {
+        if (error1) return onError(req, res, error1);
+        if (!user) return onFail(req, res, reason1 || defaultFailed);
+        verify(query, user, (error2, result, reason2) => {
+          if (error2) return onError(req, res, error2);
+          if (!result) return onFail(req, res, reason2 || defaultFailed);
+          req.hadrian.auth[name] = {
+            clientType, query, model: name, result
+          };
+          req.hadrian.isAuthenticated = true;
+          req.deserializedUser = user;
+          req.user = deserializer(user, req);
+          next();
+        }, req);
+      }, req);
     });
   };
 
   const middleware = [];
   if (options.selfInit) middleware.push(init(options));
   middleware.push(authFunction);
-  if (options.useSessions) middleware.push(saveSession(options, onError));
+  if (options.useSessions) middleware.push(saveSession(options));
   if (options.authenticateOnSuccess) middleware.push(makeResponder(options.authenticateOnSuccess, 'authenticateOnSuccess'));
   return middleware.length === 1 ? authFunction : middleware;
 };

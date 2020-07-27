@@ -2,20 +2,22 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+const defaultError = async (r, rr, n, e) => n(e || new Error('Server Error'));
+
 const makeDefaults = () => ({
   name: 'default',
   useSessions: false,
   deserializeTactic: 'always',
-  extract: 'body',
   clientType: 'client',
   selfInit: false,
-  getUser: (query, done) => done(null, {}),
-  verify: (query, user, done) => done(null, true),
-  serialize: (user, done) => done(null, user),
-  deserialize: (user, done) => done(null, user),
-  initOnError: { status: 500 },
+  extract: 'body',
+  getUser: async () => ({}),
+  verify: async () => true,
+  serialize: async (user) => user,
+  deserialize: async (user) => user,
+  initOnError: defaultError,
   initOnSuccess: null,
-  authenticateOnError: { status: 500 },
+  authenticateOnError: defaultError,
   authenticateOnFail: { status: 401 },
   authenticateOnSuccess: null,
   checkAuthenticationOnFail: { status: 401 },
@@ -25,7 +27,8 @@ const makeDefaults = () => ({
   checkUnauthenticatedOnFail: { status: 401 },
   checkUnauthenticatedOnSuccess: null,
   logoutOnSuccess: null,
-  deserializeUserOnError: { status: 500 },
+  deserializeUserOnError: defaultError,
+  serializeUserOnError: defaultError,
   deserializeUserOnSuccess: null
 });
 
@@ -55,10 +58,7 @@ const modifyModel = (model, options) => {
   models[model].isDefault = isDefault; // cannot overwrite default
 };
 
-const makeExtractor = (extract) => {
-  if (typeof extract === 'function') return extract;
-  return (req, done) => done(null, req[extract]);
-};
+const makeExtractor = (extract) => (typeof extract === 'function' ? extract : (req) => req[extract]);
 
 const redirectEnd = (redirect, status) => (status
   ? (req, res) => res.status(status).redirect(redirect)
@@ -116,33 +116,33 @@ const buildOptions = (modelName, overrides, prefix) => {
 };
 
 const saveSession = (overrides) => {
-  const { serialize } = overrides;
+  const { serialize, serializeOnError } = overrides;
   return (req, res, next) => {
-    serialize(req.deserializedUser, (err, serializedUser) => {
+    const run = async () => {
+      const serializedUser = await serialize(req.deserializedUser);
       req.hadrian.user = serializedUser;
       req.session.hadrian = req.hadrian;
       next();
-    });
+    };
+    run().catch((err) => serializeOnError(req, res, next, err));
   };
 };
 
-const manualDeserializeInit = (serializedUser, deserialize, done) => {
-  done(null, function getUser(cb) {
-    if (this.deserializedUser) return cb(null, this.deserializedUser);
-    deserialize(this.hadrian.user, (err, deserializedUser2) => {
-      this.deserializedUser = deserializedUser2;
-      cb(err, deserializedUser2);
-    });
-  });
+const manualDeserializeInit = async (s, deserialize) => async function getUser() {
+  if (this.deserializedUser) return this.deserializedUser;
+  const deserializedUser = deserialize(this.hadrian.user);
+  this.deserializedUser = deserializedUser;
+  return deserializedUser;
 };
 
-const manualDeserializeAuth = () => function getUser(cb) { cb(null, this.deserializedUser); };
+const manualDeserializeAuth = () => function getUser() {
+  return Promise.resolve(this.deserializedUser);
+};
 
-const alwaysDeserializeInit = (serializedUser, deserialize, done, req) => {
-  deserialize(serializedUser, (err, user) => {
-    req.deserializedUser = user;
-    done(err, user);
-  });
+const alwaysDeserializeInit = async (serializedUser, deserialize, req) => {
+  const user = await deserialize(serializedUser);
+  req.deserializedUser = user;
+  return user;
 };
 
 const alwaysDeserializeAuth = (deserializedUser) => deserializedUser;
@@ -179,11 +179,10 @@ const init = (modelName, overrides) => {
       req.hadrian = req.session.hadrian;
       req.deserializedUser = null;
       if (req.hadrian.user) {
-        deserializer(req.hadrian.user, deserialize, (err, user) => {
-          if (err) onError(req, res, err, next);
+        deserializer(req.hadrian.user, deserialize, req).then((user) => {
           req.user = user;
           next();
-        }, req);
+        }).catch((err) => { onError(req, res, next, err); });
       } else next();
     } else {
       req.hadrian = { isAuthenticated: false, auth: {} };
@@ -195,8 +194,6 @@ const init = (modelName, overrides) => {
   if (options.initOnSuccess) return [initMiddleware, makeResponder(options.initOnSuccess, 'initOnSuccess')];
   return initMiddleware;
 };
-
-const defaultFailed = 'Failed to verify';
 
 const authenticate = (modelName, overrides) => {
   if (typeof modelName === 'object') {
@@ -213,24 +210,22 @@ const authenticate = (modelName, overrides) => {
   const deserializer = options.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
 
   const authFunction = (req, res, next) => {
-    extract(req, (error0, query, reason) => {
-      if (error0) return onError(req, res, error0);
-      if (!query) return onFail(req, res, reason || defaultFailed);
-      getUser(query, (error1, user, reason1) => {
-        if (error1) return onError(req, res, error1);
-        if (!user) return onFail(req, res, reason1 || defaultFailed);
-        verify(query, user, (error2, result, reason2) => {
-          if (error2) return onError(req, res, error2);
-          if (!result) return onFail(req, res, reason2 || defaultFailed);
-          req.hadrian.auth[name] = {
-            clientType, query, model: name, result
-          };
-          req.hadrian.isAuthenticated = true;
-          req.deserializedUser = user;
-          req.user = deserializer(user, req);
-          next();
-        }, req);
-      }, req);
+    const run = async () => {
+      const query = await extract(req);
+      const user = await getUser(query, req);
+      const result = await verify(query, user, req);
+      if (!result) return onFail(req, res, next);
+      req.hadrian.auth[name] = {
+        clientType, query, model: name, result
+      };
+      req.hadrian.isAuthenticated = true;
+      req.deserializedUser = user;
+      req.user = deserializer(user, req);
+      next();
+    };
+    run().catch((err) => {
+      if (err.isFail) return onFail(req, res, next, err);
+      onError(req, res, next, err);
     });
   };
 
@@ -318,15 +313,22 @@ const deserializeUser = (modelName, overrides) => {
   const onError = makeResponder(options.deserializeUserOnError, 'deserializeUserOnError');
   const deserializeMiddleware = (req, res, next) => {
     if (!req.user) return next();
-    req.user((err) => {
-      if (err) return onError();
-      next();
-    });
+    req.user().then(() => { next(); }).catch((err) => { onError(req, res, next, err); });
   };
   if (options.deserializeUserOnSuccess) return [deserializeMiddleware, makeResponder(options.deserializeUserOnSuccess, 'deserializeUserOnSuccess')];
   return deserializeMiddleware;
 };
 
+class Fail extends Error {
+  constructor(message) {
+    super(message); // (1)
+    this.name = 'ValidationError'; // (2)
+    this.reason = message;
+    this.isFail = true;
+  }
+}
+
+exports.Fail = Fail;
 exports.authenticate = authenticate;
 exports.checkAuthenticated = checkAuthenticated;
 exports.checkUnauthenticated = checkUnauthenticated;
@@ -337,4 +339,3 @@ exports.initialize = init;
 exports.logout = logout;
 exports.models = models;
 exports.modifyModel = modifyModel;
-exports.saveSession = saveSession;

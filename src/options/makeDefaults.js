@@ -1,27 +1,30 @@
+const defaultError = async (r, rr, n, e) => n(e || new Error('Server Error'));
+const defaultFail = { sendStatus: 401 };
+
 const makeDefaults = () => ({
   name: 'default',
   useSessions: false,
   deserializeTactic: 'always',
-  extract: 'body',
   clientType: 'client',
   selfInit: false,
-  getUser: (query, done) => done(null, {}),
-  verify: (query, user, done) => done(null, true),
-  serialize: (user, done) => done(null, user),
-  deserialize: (user, done) => done(null, user),
-  initOnError: { status: 500 },
+  extract: 'body',
+  getUser: async () => ({}),
+  verify: async () => true,
+  serialize: async (user) => user,
+  deserialize: async (user) => user,
+  initOnError: defaultError,
   initOnSuccess: null,
-  authenticateOnError: { status: 500 },
-  authenticateOnFail: { status: 401 },
+  authenticateOnError: defaultError,
+  authenticateOnFail: defaultFail,
   authenticateOnSuccess: null,
-  checkAuthenticationOnFail: { status: 401 },
+  checkAuthenticationOnFail: defaultFail,
   checkAuthenticationOnSuccess: null,
-  checkAuthenticatedOnFail: { status: 401 },
+  checkAuthenticatedOnFail: defaultFail,
   checkAuthenticatedOnSuccess: null,
-  checkUnauthenticatedOnFail: { status: 401 },
+  checkUnauthenticatedOnFail: defaultFail,
   checkUnauthenticatedOnSuccess: null,
   logoutOnSuccess: null,
-  deserializeUserOnError: { status: 500 },
+  deserializeUserOnError: defaultError,
   deserializeUserOnSuccess: null
 });
 

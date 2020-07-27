@@ -1,13 +1,11 @@
-
 var assert = require('assert');
 var shortid = require('shortid');
 var {
-  defineModel, authenticate, init
-} = require('../');
+  defineModel, authenticate, init, Fail
+} = require('..');
 
 // completely inefficient helper function for testing
 const expressChain = require('./expressChain');
-
 
 describe('authenticate()', function () {
   it('should successfully authenticate with default settings', function (done) {
@@ -75,13 +73,13 @@ describe('authenticate()', function () {
       useSessions: true,
       selfInit: true,
       authenticateOnFail: () => done(),
-      verify: (a, b, done2) => done2(null, false)
+      verify: () => false
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if getUser passes falsy result', function (done) {
+  it('onFail called if verify throws Fail', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -92,13 +90,13 @@ describe('authenticate()', function () {
       useSessions: true,
       selfInit: true,
       authenticateOnFail: () => done(),
-      getUser: (a, done2) => done2(null, false)
+      verify: () => { throw new Fail('failed to verify'); }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if extract passes falsy result', function (done) {
+  it('onFail called if getUser throws Fail', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -109,7 +107,24 @@ describe('authenticate()', function () {
       useSessions: true,
       selfInit: true,
       authenticateOnFail: () => done(),
-      extract: (a, done2) => done2(null, false)
+      getUser: () => { throw new Fail('Failed to get User'); }
+    }, true);
+    expressChain(authenticate())(req, res, () => {
+      throw new Error('This should never happen');
+    });
+  });
+  it('onFail called if extract throws Fail', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      session: {}
+    };
+    const res = {};
+    defineModel(modelName, {
+      useSessions: true,
+      selfInit: true,
+      authenticateOnFail: () => done(),
+      extract: () => { throw new Fail('Couldnt Extract'); }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');

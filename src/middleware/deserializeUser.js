@@ -10,10 +10,7 @@ const deserializeUser = (modelName, overrides) => {
   const onError = makeResponder(options.deserializeUserOnError, 'deserializeUserOnError');
   const deserializeMiddleware = (req, res, next) => {
     if (!req.user) return next();
-    req.user((err) => {
-      if (err) return onError();
-      next();
-    });
+    req.user().then(() => { next(); }).catch((err) => { onError(req, res, next, err); });
   };
   if (options.deserializeUserOnSuccess) return [deserializeMiddleware, makeResponder(options.deserializeUserOnSuccess, 'deserializeUserOnSuccess')];
   return deserializeMiddleware;
