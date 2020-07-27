@@ -1,5 +1,7 @@
-# Hadrian
+# Hadrian V2.0.0-alpha
 > Fast and versatile authentication middleware for Express.js.
+
+## WARNING! This readme is out of date
 
 [![Version][npm-version]][npm-url]
 [![Dependencies][npm-dependencies]][npm-url]
