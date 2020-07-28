@@ -28,16 +28,36 @@ $ npm install hadrian
 
 ## Usage
 
-Use the defineModel function to define an Authentication Model.
+Use the defineModel function to define an Authentication Model
 
+You can provide a function for each of the authentication steps:
+
+- extract - (req) => query
+
+- getData - (query) => data
+
+- verify - (query, data) => result
+
+- setUser - (creds, data, result) => user
+
+The model can use sync or async functions.
+
+Proposed...
 ```sh
 defineModel(
-  'password',
   {
-    extract: 'body',
-    useSessions: true,
-    getUser: (query, done) => db.findUserByUsername(query.username, done),
-    verify: (query, user, done) => done(null, query.password === user.password)
+    name: 'password',
+    authenticate: {
+      extract: 'body',
+      getData: (query) => db.findUserByUsername(query.username),
+      verify: (query, data) => query.password === data.password,
+      setUser: (query, data) => data,
+    },
+    sessions: {
+      useSessions: true,
+      serialize: (deserializedUser) => deserialziedUser.username,
+      deserialize: (serializedUser) => findUserByUsername(serialziedUser)
+    }
   },
   true
 );
@@ -45,35 +65,6 @@ defineModel(
 
 The first argument is the model name. The second the model options. And the third argument is whether to set this model to default (meaning it will not have to be referenced in the middleware). If the third argument is omitted it defaults to false.
 
-Authentication Model Defaults:
-
-```sh
-{
-  // Authentication Logic
-  useSessions: false,
-  deserializeTactic: 'always',
-  selfInit: false,
-  clientType: 'client',
-  extract: 'body',
-  getUser: (extract, done) => done(null, {}),
-  verify: (extract, user, done) => done(null, true),
-  serialize: (user, done) => done(null, user),
-  deserialize: (user, done) => done(null, user),
-  // Response Logic
-  initOnError: { status: 500 },
-  initOnSuccess: null,
-  authenticateOnError: { status: 500 },
-  authenticateOnFail: { status: 401 },
-  authenticateOnSuccess: null,
-  checkAuthenticatedOnFail: { status: 401 },
-  checkAuthenticatedOnSuccess: null,
-  checkUnauthenticatedOnFail: { status: 401 },
-  checkUnauthenticatedOnSuccess: null,
-  logoutOnSuccess: null,
-  deserializeUserOnError: { status: 500 },
-  deserializeUserOnSuccess: null
-}
-```
 
 The init() middleware must be called if at the start of the request straight after any session and parsing middleware.
 
