@@ -1,10 +1,10 @@
 var shortid = require('shortid');
-var { defineModel, authenticate } = require('../');
+var { defineModel, authenticate } = require('..');
 
 describe('defineModel()', function () {
-  it('throw error if getUser() is not a function', function (done) {
+  it('throw error if getData() is not a function', function (done) {
     const modelName = shortid.generate();
-    defineModel(modelName, { getUser: 'should cause error' });
+    defineModel(modelName, { authenticate: { getData: 'should cause error' } });
     try {
       authenticate(modelName);
     } catch (err) {
@@ -13,7 +13,7 @@ describe('defineModel()', function () {
   });
   it('throw error if verify is not a function', function (done) {
     const modelName = shortid.generate();
-    defineModel(modelName, { verify: 'should cause error' });
+    defineModel(modelName, { authenticate: { verify: 'should cause error' } });
     try {
       authenticate(modelName);
     } catch (err) {

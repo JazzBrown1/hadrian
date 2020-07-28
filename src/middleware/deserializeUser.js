@@ -1,4 +1,4 @@
-import buildOptions from '../options/buildOptions';
+import { buildOptions2 } from '../options/buildOptions';
 import makeResponder from '../options/makeResponder';
 
 const deserializeUser = (modelName, overrides) => {
@@ -6,13 +6,13 @@ const deserializeUser = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'deserializeUser');
-  const onError = makeResponder(options.deserializeUserOnError, 'deserializeUserOnError');
+  const { onError: onErrorRaw, onSuccess } = buildOptions2(modelName, overrides, 'deserializeUser').deserializeUser;
+  const onError = makeResponder(onErrorRaw, 'deserializeUserOnError');
   const deserializeMiddleware = (req, res, next) => {
     if (!req.user) return next();
     req.user().then(() => { next(); }).catch((err) => { onError(req, res, next, err); });
   };
-  if (options.deserializeUserOnSuccess) return [deserializeMiddleware, makeResponder(options.deserializeUserOnSuccess, 'deserializeUserOnSuccess')];
+  if (onSuccess) return [deserializeMiddleware, makeResponder(onSuccess, 'deserializeUser.onSuccess')];
   return deserializeMiddleware;
 };
 

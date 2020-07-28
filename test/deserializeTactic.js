@@ -14,7 +14,7 @@ describe('never deserialize tactic', function () {
       session: {}
     };
     const res = {};
-    defineModel(modelName, { useSessions: true, initOnSuccess: null, deserializeTactic: 'never' });
+    defineModel(modelName, { sessions: { useSessions: true, deserializeTactic: 'never' } });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
       expressChain([init(modelName), checkAuthenticated(modelName)])(request, res, () => {
@@ -30,12 +30,14 @@ describe('never deserialize tactic', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      initOnSuccess: null,
-      deserializeTactic: 'never',
-      getUser: () => 'deserialized',
-      serialize: () => 'deserialized',
-      deserialize: () => 'deserialized'
+      sessions: {
+        useSessions: true,
+        deserializeTactic: 'never',
+        serialize: () => 'serialized',
+        deserialize: () => 'deserialized'
+      },
+
+      authenticate: { getData: () => 'deserialized' },
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
@@ -57,10 +59,8 @@ describe('never deserialize tactic', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      initOnSuccess: null,
-      deserializeTactic: 'never',
-      getUser: () => 'user',
+      sessions: { useSessions: true, deserializeTactic: 'never' },
+      authenticate: { getData: () => 'user' }
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
@@ -82,12 +82,14 @@ describe('never deserialize tactic', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      initOnSuccess: null,
-      deserializeTactic: 'never',
-      getUser: () => 'deserialized',
-      serialize: () => 'deserialized',
-      deserialize: () => 'deserialized'
+      sessions: {
+        useSessions: true,
+        deserializeTactic: 'never',
+        serialize: () => 'serialized',
+        deserialize: () => 'deserialized'
+      },
+
+      authenticate: { getData: () => 'deserialized' },
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
@@ -109,12 +111,14 @@ describe('never deserialize tactic', function () {
       };
       const res = {};
       defineModel(modelName, {
-        useSessions: true,
-        initOnSuccess: null,
-        deserializeTactic: 'never',
-        getUser: () => 'deserialized',
-        serialize: () => 'deserialized',
-        deserialize: () => 'deserialized'
+        sessions: {
+          useSessions: true,
+          deserializeTactic: 'never',
+          serialize: () => 'serialized',
+          deserialize: () => 'deserialized'
+        },
+
+        authenticate: { getData: () => 'deserialized' }
       });
       expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
         const request = { session: req.session };
@@ -135,14 +139,18 @@ describe('never deserialize tactic', function () {
       };
       const res = {};
       defineModel(modelName, {
-        useSessions: true,
-        initOnSuccess: null,
-        deserializeTactic: 'never',
-        getUser: () => 'deserialized',
-        serialize: () => 'deserialized',
-        deserialize: () => 'deserialized',
-        deserializeUserOnSuccess: (req) => {
-          done(assert.equal(req.deserializedUser, 'deserialized'));
+        sessions: {
+          useSessions: true,
+          deserializeTactic: 'never',
+          serialize: () => 'serialized',
+          deserialize: () => 'deserialized'
+        },
+
+        authenticate: { getData: () => 'deserialized' },
+        deserializeUser: {
+          onSuccess: (req) => {
+            done(assert.equal(req.deserializedUser, 'deserialized'));
+          }
         }
       });
       expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
@@ -164,13 +172,17 @@ describe('never deserialize tactic', function () {
       };
       const res = {};
       defineModel(modelName, {
-        useSessions: true,
-        initOnSuccess: null,
-        deserializeTactic: 'never',
-        getUser: () => 'deserialized',
-        serialize: () => 'deserialized',
-        deserialize: () => { throw new Error('error'); },
-        deserializeUserOnError: () => done()
+        sessions: {
+          useSessions: true,
+          deserializeTactic: 'never',
+          serialize: () => 'serialized',
+          deserialize: () => { throw new Error('error'); }
+        },
+
+        authenticate: { getData: () => 'deserialized' },
+        deserializeUser: {
+          onError: () => done()
+        }
       });
       expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
         const request = { session: req.session };
@@ -191,12 +203,14 @@ describe('never deserialize tactic', function () {
       };
       const res = {};
       defineModel(modelName, {
-        useSessions: true,
-        initOnSuccess: null,
-        deserializeTactic: 'never',
-        getUser: () => 'deserialized',
-        serialize: () => 'serialized',
-        deserialize: () => 'deserialized',
+        sessions: {
+          useSessions: true,
+          deserializeTactic: 'never',
+          serialize: () => 'serialized',
+          deserialize: () => 'deserialized',
+        },
+
+        authenticate: { getData: () => 'deserialized' },
       });
       expressChain([init(modelName), deserializeUser(modelName)])(request, res, () => {
         done();
@@ -210,11 +224,13 @@ describe('never deserialize tactic', function () {
       };
       const res = {};
       defineModel(modelName, {
-        useSessions: true,
-        deserializeTactic: 'never',
-        getUser: () => 'deserialized',
-        serialize: () => 'serialized',
-        deserialize: () => 'deserialized',
+        sessions: {
+          useSessions: true,
+          serialize: () => 'serialized',
+          deserialize: () => 'deserialized',
+          deserializeTactic: 'never',
+        },
+        authenticate: { getData: () => 'deserialized' },
       });
       expressChain([init(modelName), deserializeUser({
         onSuccess: () => done()
@@ -231,12 +247,14 @@ describe('never deserialize tactic', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      initOnSuccess: null,
-      deserializeTactic: 'never',
-      getUser: () => 'deserialized',
-      serialize: () => 'deserialized',
-      deserialize: () => 'deserialized'
+      sessions: {
+        useSessions: true,
+        deserializeTactic: 'never',
+        serialize: () => 'serialized',
+        deserialize: () => 'deserialized'
+      },
+
+      authenticate: { getData: () => 'deserialized' },
     });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       req.user().then((user) => {
@@ -254,7 +272,7 @@ describe('always deserialize tactic', function () {
       session: {}
     };
     const res = {};
-    defineModel(modelName, { useSessions: true, initOnSuccess: null, deserializeTactic: 'always' });
+    defineModel(modelName, { sessions: { useSessions: true, deserializeTactic: 'always' } });
     expressChain([init(modelName), authenticate(modelName)])(newReq, res, (req) => {
       const request = { session: req.session };
       expressChain([init(modelName), checkAuthenticated(modelName)])(request, res, () => {

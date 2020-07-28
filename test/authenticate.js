@@ -14,7 +14,7 @@ describe('authenticate()', function () {
       body: {}
     };
     const res = {};
-    defineModel(modelName, { useSessions: false, selfInit: true });
+    defineModel(modelName, { sessions: { useSessions: false }, authenticate: { selfInit: true } });
     expressChain(authenticate(modelName))(req, res, () => done());
   });
   it('should save auth info to session object', function (done) {
@@ -24,7 +24,7 @@ describe('authenticate()', function () {
       session: {}
     };
     const res = {};
-    defineModel(modelName, { useSessions: true, selfInit: true });
+    defineModel(modelName, { sessions: { useSessions: true }, authenticate: { selfInit: true } });
     expressChain(authenticate(modelName))(req, res, () => {
       assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
       done();
@@ -37,7 +37,7 @@ describe('authenticate()', function () {
       session: {}
     };
     const res = {};
-    defineModel(modelName, { useSessions: true, selfInit: true });
+    defineModel(modelName, { sessions: { useSessions: true }, authenticate: { selfInit: true } });
     expressChain(authenticate(modelName))(req, res, () => {
       assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
       done();
@@ -51,11 +51,13 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnSuccess: () => {
-        assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
-        done();
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onSuccess: () => {
+          assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
+          done();
+        }
       }
     }, true);
     expressChain(authenticate())(req, res, () => {
@@ -70,10 +72,12 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnFail: () => done(),
-      verify: () => false
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        verify: () => false
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
@@ -87,16 +91,18 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnFail: () => done(),
-      verify: () => { throw new Fail('failed to verify'); }
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        verify: () => { throw new Fail('failed to verify'); }
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if getUser throws Fail', function (done) {
+  it('onFail called if getData throws Fail', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -104,10 +110,12 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnFail: () => done(),
-      getUser: () => { throw new Fail('Failed to get User'); }
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        getData: () => { throw new Fail('Failed to get User'); }
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
@@ -121,10 +129,12 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnFail: () => done(),
-      extract: () => { throw new Fail('Couldnt Extract'); }
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        extract: () => { throw new Fail('Couldnt Extract'); }
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
@@ -138,16 +148,18 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnError: () => done(),
-      verify: (a, b, done2) => done2(true, false)
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onError: () => done(),
+        verify: (a, b, done2) => done2(true, false)
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if getUser passes error', function (done) {
+  it('onFail called if getData passes error', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -155,10 +167,12 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnError: () => done(),
-      getUser: (a, done2) => done2(true, false)
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onError: () => done(),
+        getData: (a, done2) => done2(true, false)
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
@@ -172,10 +186,12 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: true,
-      selfInit: true,
-      authenticateOnError: () => done(),
-      extract: (a, done2) => done2(true, false)
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onError: () => done(),
+        extract: (a, done2) => done2(true, false)
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
@@ -197,8 +213,8 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: false,
-      selfInit: false
+      sessions: { useSessions: false },
+      authenticate: { selfInit: false }
     }, true);
     expressChain([init(), authenticate()])(req, res, () => {
       done();
@@ -211,9 +227,13 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      selfInit: true,
-      useSessions: false,
-      authenticateOnSuccess: () => done(),
+      authenticate: {
+        selfInit: true,
+        onSuccess: () => done(),
+      },
+      sessions: {
+        useSessions: false,
+      }
     }, true);
     expressChain(authenticate())(req, res, () => {
       throw new Error('this should never happen');
@@ -229,7 +249,7 @@ describe('authenticate()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: false,
+      sessions: { useSessions: false },
     });
     expressChain(authenticate({ onSuccess: () => done() }))(req, res, () => {
       throw new Error('this should never happen');

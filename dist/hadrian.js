@@ -2,38 +2,62 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const defaultError = async (r, rr, n, e) => n(e || new Error('Server Error'));
+const defaultError = (r, rr, n, e) => n(e || new Error('Server Error'));
+const defaultFail = { sendStatus: 401 };
 
 const makeDefaults = () => ({
-  name: 'default',
-  useSessions: false,
-  deserializeTactic: 'always',
+  name: '_default',
   clientType: 'client',
-  selfInit: false,
-  extract: 'body',
-  getUser: async () => ({}),
-  verify: async () => true,
-  serialize: async (user) => user,
-  deserialize: async (user) => user,
-  initOnError: defaultError,
-  initOnSuccess: null,
-  authenticateOnError: defaultError,
-  authenticateOnFail: { status: 401 },
-  authenticateOnSuccess: null,
-  checkAuthenticationOnFail: { status: 401 },
-  checkAuthenticationOnSuccess: null,
-  checkAuthenticatedOnFail: { status: 401 },
-  checkAuthenticatedOnSuccess: null,
-  checkUnauthenticatedOnFail: { status: 401 },
-  checkUnauthenticatedOnSuccess: null,
-  logoutOnSuccess: null,
-  deserializeUserOnError: defaultError,
-  serializeUserOnError: defaultError,
-  deserializeUserOnSuccess: null
+  sessions: {
+    useSessions: false,
+    deserializeTactic: 'always',
+    serialize: (user) => user,
+    deserialize: (user) => user,
+  },
+  authenticate: {
+    extract: 'body',
+    getData: () => ({}),
+    verify: () => true,
+    setUser: (q, data) => data,
+    onError: defaultError,
+    onFail: defaultFail,
+    onSuccess: null,
+    selfInit: false,
+  },
+  init: {
+    onError: defaultError,
+    onSuccess: null,
+  },
+  checkAuthenticated: {
+    onFail: defaultFail,
+    onSuccess: null
+  },
+  checkUnauthenticated: {
+    onFail: defaultFail,
+    onSuccess: null
+  },
+  logout: {
+    onSuccess: null
+  },
+  deserializeUser: {
+    onError: defaultError,
+    onSuccess: null
+  }
 });
 
 const models = {
   _default: makeDefaults()
+};
+
+const isObj = (x) => typeof x === 'object' && x !== null && !Array.isArray(x);
+
+const merge = (a, b, i = 0) => {
+  Object.keys(b).forEach((key) => {
+    if (a[key] === undefined) throw new Error(`Unknown option ${key}`);
+    if (isObj(a[key]) && isObj(b[key]) && i > 0) merge(a[key], b[key], i - 1);
+    else a[key] = b[key];
+  });
+  return a;
 };
 
 const defineModel = (model, options, isDefault) => {
@@ -43,9 +67,12 @@ const defineModel = (model, options, isDefault) => {
     if (!options.name) throw new Error('Model must have a name');
     model = model.name;
   }
-  models[model] = { ...makeDefaults(), ...options };
-  models[model].name = model;
-  models[model].isDefault = isDefault; // is default cannot be declared in options obj
+  // First model defined is always set to default unless explicitly set to false
+  if (models.length < 2 && isDefault !== false) isDefault = true;
+
+  models[model] = merge(makeDefaults(), options, 1);
+  models[model].name = model; // name overridden by model name if specified
+  models[model].isDefault = isDefault; // is default cannot be declared in options obj by design
   if (isDefault) {
     models._default = models[model];
   }
@@ -90,33 +117,26 @@ const makeResponder = (end, type) => {
   throw new Error(`Invalid ${type} input`);
 };
 
-const addEventsToOptions = (options, prefix) => {
-  if (options.onFail) options[`${prefix}OnFail`] = options.onFail;
-  if (options.onError) options[`${prefix}OnError`] = options.onError;
-  if (options.onSuccess) options[`${prefix}OnSuccess`] = options.onSuccess;
-  return options;
-};
-
-const makeOptionsObject = (modelName, overrides) => {
+const getOptionsObject = (modelName) => {
   if (modelName && !models[modelName]) throw new Error('model is not set');
-  return { ...models[modelName || '_default'], ...overrides };
+  return models[modelName || '_default'];
 };
 
 const parseOptions = (options) => {
-  if (typeof options.verify !== 'function') throw new Error('verify must be a function');
-  if (typeof options.getUser !== 'function') throw new Error('getUser must be a function');
+  if (typeof options.authenticate.verify !== 'function') throw new Error('verify must be a function');
+  if (typeof options.authenticate.getData !== 'function') throw new Error('getUser must be a function');
   return options;
 };
 
-const buildOptions = (modelName, overrides, prefix) => {
-  const options = makeOptionsObject(modelName, overrides);
-  addEventsToOptions(options, prefix);
+const buildOptions2 = (modelName, overrides, prefix) => {
+  const options = { ...getOptionsObject(modelName) };
+  options[prefix] = { ...options[prefix], ...overrides };
   parseOptions(options);
   return options;
 };
 
-const saveSession = (overrides) => {
-  const { serialize, serializeOnError } = overrides;
+const saveSession = (options, onError) => {
+  const { serialize } = options.sessions;
   return (req, res, next) => {
     const run = async () => {
       const serializedUser = await serialize(req.deserializedUser);
@@ -124,7 +144,7 @@ const saveSession = (overrides) => {
       req.session.hadrian = req.hadrian;
       next();
     };
-    run().catch((err) => serializeOnError(req, res, next, err));
+    run().catch((err) => onError(req, res, next, err));
   };
 };
 
@@ -148,8 +168,8 @@ const alwaysDeserializeInit = async (serializedUser, deserialize, req) => {
 const alwaysDeserializeAuth = (deserializedUser) => deserializedUser;
 
 const noSessionInit = (options) => {
-  if (options.initOnSuccess) {
-    const onSuccess = makeResponder(options.initOnSuccess, 'initOnSuccess');
+  if (options.init.onSuccess) {
+    const onSuccess = makeResponder(options.init.onSuccess, 'init.onSuccess');
     return (req, res, next) => {
       req.hadrian = { isAuthenticated: false };
       onSuccess(req, res, next);
@@ -166,13 +186,13 @@ const init = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'init');
+  const options = buildOptions2(modelName, overrides, 'init');
 
-  if (!options.useSessions) return noSessionInit(options);
+  if (!options.sessions.useSessions) return noSessionInit(options);
 
-  const { deserialize } = options;
-  const onError = makeResponder(options.initOnError, 'initOnError');
-  const deserializer = options.deserializeTactic === 'always' ? alwaysDeserializeInit : manualDeserializeInit;
+  const { deserialize, deserializeTactic } = options.sessions;
+  const onError = makeResponder(options.init.onError, 'init.onError');
+  const deserializer = deserializeTactic === 'always' ? alwaysDeserializeInit : manualDeserializeInit;
 
   const initMiddleware = (req, res, next) => {
     if (req.session.hadrian) {
@@ -191,7 +211,7 @@ const init = (modelName, overrides) => {
     }
   };
 
-  if (options.initOnSuccess) return [initMiddleware, makeResponder(options.initOnSuccess, 'initOnSuccess')];
+  if (options.init.onSuccess) return [initMiddleware, makeResponder(options.init.onSuccess, 'init.onSuccess')];
   return initMiddleware;
 };
 
@@ -200,21 +220,23 @@ const authenticate = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'authenticate');
+  const options = buildOptions2(modelName, overrides, 'authenticate');
+  const { clientType, name } = options;
   const {
-    verify, getUser, clientType, name
-  } = options;
-  const extract = makeExtractor(options.extract);
-  const onError = makeResponder(options.authenticateOnError, 'authenticateOnError');
-  const onFail = makeResponder(options.authenticateOnFail, 'authenticateOnFail');
-  const deserializer = options.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
+    verify, getData, setUser
+  } = options.authenticate;
+  const extract = makeExtractor(options.authenticate.extract);
+  const onError = makeResponder(options.authenticate.onError, 'authenticate.onError');
+  const onFail = makeResponder(options.authenticate.onFail, 'authenticate.onFail');
+  const deserializer = options.sessions.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
 
   const authFunction = (req, res, next) => {
     const run = async () => {
       const query = await extract(req);
-      const user = await getUser(query, req);
-      const result = await verify(query, user, req);
+      const data = await getData(query, req);
+      const result = await verify(query, data, req);
       if (!result) return onFail(req, res, next);
+      const user = await setUser(query, data, req);
       req.hadrian.auth[name] = {
         clientType, query, model: name, result
       };
@@ -230,67 +252,62 @@ const authenticate = (modelName, overrides) => {
   };
 
   const middleware = [];
-  if (options.selfInit) middleware.push(init(options));
+  if (options.authenticate.selfInit) middleware.push(init(options));
   middleware.push(authFunction);
-  if (options.useSessions) middleware.push(saveSession(options));
-  if (options.authenticateOnSuccess) middleware.push(makeResponder(options.authenticateOnSuccess, 'authenticateOnSuccess'));
+  if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
+  if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));
   return middleware.length === 1 ? authFunction : middleware;
 };
 
-const checkAuthenticatedBasic = (modelName, overrides, wrapperName) => {
-  if (typeof modelName === 'object') {
-    overrides = modelName;
-    modelName = null;
-  }
-  const onFailOption = `${wrapperName}OnFail`;
-  const onSuccessOption = `${wrapperName}OnSuccess`;
-  const options = buildOptions(modelName, overrides, wrapperName);
-  const onFail = makeResponder(options[onFailOption], onFailOption);
-  if (!options[onSuccessOption]) {
-    return (req, res, next) => {
-      if (req.hadrian.isAuthenticated) return next();
-      onFail(req, res);
-    };
-  }
-  const onSuccess = makeResponder(options[onSuccessOption], onSuccessOption);
-  return (req, res, next) => {
-    if (req.hadrian.isAuthenticated) return onSuccess(req, res, next);
-    onFail(req, res);
-  };
-};
+/* eslint-disable max-len */
 
-const checkUnauthenticatedBasic = (modelName, overrides, wrapperName) => {
+const checkUnauthenticated = (modelName, overrides) => {
   if (typeof modelName === 'object') {
     overrides = modelName;
     modelName = null;
   }
-  const onFailOption = `${wrapperName}OnFail`;
-  const onSuccessOption = `${wrapperName}OnSuccess`;
-  const options = buildOptions(modelName, overrides, wrapperName);
-  const onFail = makeResponder(options[onFailOption], onFailOption);
-  if (!options[onSuccessOption]) {
+  const options = buildOptions2(modelName, overrides, 'checkUnauthenticated').checkUnauthenticated;
+  const onFail = makeResponder(options.onFail, 'checkUnauthenticated.OnFail');
+  if (!options.onSuccess) {
     return (req, res, next) => {
       if (!req.hadrian.isAuthenticated) return next();
       onFail(req, res);
     };
   }
-  const onSuccess = makeResponder(options[onSuccessOption], onSuccessOption);
+  const onSuccess = makeResponder(options.onSuccess, 'checkUnauthenticated.onSuccess');
   return (req, res, next) => {
     if (!req.hadrian.isAuthenticated) return onSuccess(req, res, next);
     onFail(req, res);
   };
 };
 
-const checkAuthenticated = (s, o) => checkAuthenticatedBasic(s, o, 'checkAuthenticated');
-const checkUnauthenticated = (s, o) => checkUnauthenticatedBasic(s, o, 'checkUnauthenticated');
+const checkAuthenticated = (modelName, overrides) => {
+  if (typeof modelName === 'object') {
+    overrides = modelName;
+    modelName = null;
+  }
+  const options = buildOptions2(modelName, overrides, 'checkAuthenticated').checkAuthenticated;
+  const onFail = makeResponder(options.onFail, 'checkAuthenticated.OnFail');
+  if (!options.onSuccess) {
+    return (req, res, next) => {
+      if (req.hadrian.isAuthenticated) return next();
+      onFail(req, res);
+    };
+  }
+  const onSuccess = makeResponder(options.onSuccess, 'checkAuthenticated.onSuccess');
+  return (req, res, next) => {
+    if (req.hadrian.isAuthenticated) return onSuccess(req, res, next);
+    onFail(req, res);
+  };
+};
 
 const logout = (modelName, overrides) => {
   if (typeof modelName === 'object') {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'logout');
-  if (!options.useSessions) throw new Error('Cannot use Logout middleware when use sessions set false in model');
+  const options = buildOptions2(modelName, overrides, 'logout');
+  if (!options.sessions.useSessions) throw new Error('Cannot use Logout middleware when use sessions set false in model');
   const logoutMiddleware = (req, res, next) => {
     delete req.user;
     req.hadrian = {
@@ -300,7 +317,7 @@ const logout = (modelName, overrides) => {
     req.session.hadrian = req.hadrian;
     next();
   };
-  if (options.logoutOnSuccess) return [logoutMiddleware, makeResponder(options.logoutOnSuccess, 'logoutOnSuccess')];
+  if (options.logout.onSuccess) return [logoutMiddleware, makeResponder(options.logout.onSuccess, 'logoutOnSuccess')];
   return logoutMiddleware;
 };
 
@@ -309,13 +326,13 @@ const deserializeUser = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'deserializeUser');
-  const onError = makeResponder(options.deserializeUserOnError, 'deserializeUserOnError');
+  const { onError: onErrorRaw, onSuccess } = buildOptions2(modelName, overrides, 'deserializeUser').deserializeUser;
+  const onError = makeResponder(onErrorRaw, 'deserializeUserOnError');
   const deserializeMiddleware = (req, res, next) => {
     if (!req.user) return next();
     req.user().then(() => { next(); }).catch((err) => { onError(req, res, next, err); });
   };
-  if (options.deserializeUserOnSuccess) return [deserializeMiddleware, makeResponder(options.deserializeUserOnSuccess, 'deserializeUserOnSuccess')];
+  if (onSuccess) return [deserializeMiddleware, makeResponder(onSuccess, 'deserializeUser.onSuccess')];
   return deserializeMiddleware;
 };
 

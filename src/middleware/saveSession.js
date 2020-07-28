@@ -1,5 +1,5 @@
-const saveSession = (overrides, onError) => {
-  const { serialize } = overrides;
+const saveSession = (options, onError) => {
+  const { serialize } = options.sessions;
   return (req, res, next) => {
     const run = async () => {
       const serializedUser = await serialize(req.deserializedUser);

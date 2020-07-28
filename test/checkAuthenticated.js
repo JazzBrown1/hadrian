@@ -1,6 +1,6 @@
 var shortid = require('shortid');
 const expressChain = require('./expressChain');
-var { defineModel, checkAuthenticated } = require('../');
+var { defineModel, checkAuthenticated } = require('..');
 
 describe('checkAuthenticated()', function () {
   it('should call next when authenticated', function (done) {
@@ -15,7 +15,7 @@ describe('checkAuthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, { useSessions: false });
+    defineModel(modelName, { sessions: { useSessions: false } });
     expressChain(checkAuthenticated(modelName))(req, res, done);
   });
   it('should call onFail when unauthenticated', function (done) {
@@ -27,7 +27,12 @@ describe('checkAuthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, { useSessions: false, checkAuthenticatedOnFail: () => done() });
+    defineModel(modelName, {
+      sessions: {
+        useSessions: false
+      },
+      checkAuthenticated: { onFail: () => done() }
+    });
     expressChain(checkAuthenticated(modelName))(req, res, () => {
       throw new Error('this should never happen');
     });
@@ -42,9 +47,11 @@ describe('checkAuthenticated()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: false,
-      checkAuthenticatedOnSuccess: () => {},
-      checkAuthenticatedOnFail: () => done()
+      sessions: { useSessions: false },
+      checkAuthenticated: {
+        onSuccess: () => {},
+        onFail: () => done()
+      }
     });
     expressChain(checkAuthenticated(modelName))(req, res, () => {
       throw new Error('this should never happen');
@@ -60,8 +67,8 @@ describe('checkAuthenticated()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: false,
-      checkAuthenticatedOnFail: () => done(),
+      sessions: { useSessions: false },
+      checkAuthenticated: { onFail: () => done() },
     }, true);
     expressChain(checkAuthenticated())(req, res, () => {
       throw new Error('this should never happen');
@@ -77,7 +84,7 @@ describe('checkAuthenticated()', function () {
     };
     const res = {};
     defineModel(modelName, {
-      useSessions: false,
+      sessions: { useSessions: false },
     }, true);
     expressChain(checkAuthenticated({ onFail: () => done() }))(req, res, () => {
       throw new Error('this should never happen');

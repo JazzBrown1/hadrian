@@ -1,4 +1,4 @@
-import buildOptions from '../options/buildOptions';
+import { buildOptions2 } from '../options/buildOptions';
 import makeResponder from '../options/makeResponder';
 
 const logout = (modelName, overrides) => {
@@ -6,8 +6,8 @@ const logout = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'logout');
-  if (!options.useSessions) throw new Error('Cannot use Logout middleware when use sessions set false in model');
+  const options = buildOptions2(modelName, overrides, 'logout');
+  if (!options.sessions.useSessions) throw new Error('Cannot use Logout middleware when use sessions set false in model');
   const logoutMiddleware = (req, res, next) => {
     delete req.user;
     req.hadrian = {
@@ -17,7 +17,7 @@ const logout = (modelName, overrides) => {
     req.session.hadrian = req.hadrian;
     next();
   };
-  if (options.logoutOnSuccess) return [logoutMiddleware, makeResponder(options.logoutOnSuccess, 'logoutOnSuccess')];
+  if (options.logout.onSuccess) return [logoutMiddleware, makeResponder(options.logout.onSuccess, 'logoutOnSuccess')];
   return logoutMiddleware;
 };
 

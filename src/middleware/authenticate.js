@@ -1,6 +1,6 @@
 import makeExtractor from '../options/makeExtractor';
 import makeResponder from '../options/makeResponder';
-import buildOptions from '../options/buildOptions';
+import { buildOptions2 } from '../options/buildOptions';
 import saveSession from './saveSession';
 import init from './init';
 import { alwaysDeserializeAuth, manualDeserializeAuth } from '../options/deserializers';
@@ -10,21 +10,23 @@ const authenticate = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions(modelName, overrides, 'authenticate');
+  const options = buildOptions2(modelName, overrides, 'authenticate');
+  const { clientType, name } = options;
   const {
-    verify, getUser, clientType, name
-  } = options;
-  const extract = makeExtractor(options.extract);
-  const onError = makeResponder(options.authenticateOnError, 'authenticateOnError');
-  const onFail = makeResponder(options.authenticateOnFail, 'authenticateOnFail');
-  const deserializer = options.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
+    verify, getData, setUser
+  } = options.authenticate;
+  const extract = makeExtractor(options.authenticate.extract);
+  const onError = makeResponder(options.authenticate.onError, 'authenticate.onError');
+  const onFail = makeResponder(options.authenticate.onFail, 'authenticate.onFail');
+  const deserializer = options.sessions.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
 
   const authFunction = (req, res, next) => {
     const run = async () => {
       const query = await extract(req);
-      const user = await getUser(query, req);
-      const result = await verify(query, user, req);
+      const data = await getData(query, req);
+      const result = await verify(query, data, req);
       if (!result) return onFail(req, res, next);
+      const user = await setUser(query, data, req);
       req.hadrian.auth[name] = {
         clientType, query, model: name, result
       };
@@ -40,10 +42,10 @@ const authenticate = (modelName, overrides) => {
   };
 
   const middleware = [];
-  if (options.selfInit) middleware.push(init(options));
+  if (options.authenticate.selfInit) middleware.push(init(options));
   middleware.push(authFunction);
-  if (options.useSessions) middleware.push(saveSession(options, onError));
-  if (options.authenticateOnSuccess) middleware.push(makeResponder(options.authenticateOnSuccess, 'authenticateOnSuccess'));
+  if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
+  if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));
   return middleware.length === 1 ? authFunction : middleware;
 };
 

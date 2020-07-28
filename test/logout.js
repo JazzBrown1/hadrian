@@ -1,7 +1,6 @@
-
 var assert = require('assert');
 var shortid = require('shortid');
-var { defineModel, logout } = require('../');
+var { defineModel, logout } = require('..');
 const expressChain = require('./expressChain');
 
 describe('logout()', function () {
@@ -21,7 +20,7 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { useSessions: true });
+    defineModel(modelName, { sessions: { useSessions: true } });
     const res = {};
     logout(modelName)(req, res, () => {
       assert.equal(req.hadrian.isAuthenticated, false);
@@ -31,7 +30,7 @@ describe('logout()', function () {
   });
   it('throws error if use sessions set to false', function (done) {
     const modelName = shortid.generate();
-    defineModel(modelName, { useSessions: false });
+    defineModel(modelName, { sessions: { useSessions: false } });
     try { logout(modelName); } catch (err) { done(); }
   });
   it('calls onSuccess() if set', function (done) {
@@ -50,7 +49,7 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { useSessions: true, onSuccess: () => done() });
+    defineModel(modelName, { sessions: { useSessions: true }, logout: { onSuccess: () => done() } });
     const res = {};
     expressChain(logout(modelName))(req, res, () => {
       throw new Error('this should never happen');
@@ -72,7 +71,7 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { useSessions: true, onSuccess: () => done() }, true);
+    defineModel(modelName, { sessions: { useSessions: true }, logout: { onSuccess: () => done() } }, true);
     const res = {};
     expressChain(logout())(req, res, () => {
       throw new Error('this should never happen');
@@ -94,7 +93,7 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { useSessions: true });
+    defineModel(modelName, { sessions: { useSessions: true } });
     const res = {};
     expressChain(logout({ onSuccess: () => done() }))(req, res, () => {
       throw new Error('this should never happen');
