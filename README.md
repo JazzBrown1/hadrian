@@ -10,7 +10,11 @@
 
 Hadrian is a flexible and dynamic authentication middleware for express.js. It has been designed to be easy to use, modular, unopinionated and take the complexities out of building authentication into server apps.
 
-Hadrian speeds up and simplifies the process of adding authentication layers to express apps; by allowing you to declare authentication model in a friendly schema, you can quickly add or improve authentication in your app.
+Hadrian aims to add a very low level abstraction for autentication in express apps, removing unneccasarry complexities while maintaing full flexibility to create and support any type of authentication strategy.
+
+Hadrian is Quick! By preprocessing the authentication models at time of start up, Hadrian is able to handle requests with maximum efficency.
+
+As of version 2 the API has full async support and call callback functions have been removed. This is inline with the upcoming Express 5x release.
 
 ## Installation
 
@@ -63,14 +67,13 @@ defineModel(
 );
 ```
 
-The first argument is the model name. The second the model options. And the third argument is whether to set this model to default (meaning it will not have to be referenced in the middleware). If the third argument is omitted it defaults to false.
+The second argument will set this model to default (meaning it will not have to be referenced in the middleware).
 
 
 The init() middleware must be called if at the start of the request straight after any session and parsing middleware.
 
 ```sh
 app.use(json({ extended: false }));
-app.use(urlencoded({ extended: true }));
 app.use(
   session({
     secret: 'a very secret secret',
@@ -88,32 +91,33 @@ Use the authenticate() middleware to authenticate a client.
 app.use('/login', checkUnauthenticated(), authenticate(), (req, res) => {
   res.redirect('/home');
 });
-
-// Or pass the onSuccess response in the authentication middleware options
-
-app.use('/login', checkUnauthenticated(), authenticate({ onSuccess: { redirect: '/home' } }));
 ```
 
-You can block routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
+You can block access to routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
 
 ```sh
-app.use('/api/private/', checkAuthenticated(), privateApiRoutes);
+app.use('/api/private/', checkAuthenticated({ onFail: { redirect: '/login' } }), privateApiRoutes);
 ```
 
-Sometimes you may need different fail, error or success responses to those set in the Authentication Model, for example this api expects a json response.
+You can set default onFail handlers in the Authenitcation model.
 
 ```sh
-const overrides = {
-  onFail: { json: { error: 'You must be logged in to get the date' } },
-  onError: { json: { error: 'Internal server error' } },
-};
+{
+  //............
+  checkAuthenticated: {
+    onFail: { redirect: '/login' }
+  },
+  checkUnauthenticated: {
+    onFail: (req, res) => res.redirect('/home')
+  }
+}
+ ```
 
-app.get('/api/private/', checkAuthenticated(overrides), privateApiRoutes);
-```
+In the above example we redirect the user using the hadrian shorthand and the equivelent express api.
 
 You can use multiple authentication models in your app.
 
-When you want to use a Model that is not set to default, pass the model name as the first argument to the middleware.
+When using multiple auth models, it is reccomended that you do not set a default model and explicity pass the model name as the first arguement in all hadrian middleware.
 
 ```sh
 app.post(
