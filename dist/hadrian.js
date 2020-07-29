@@ -2,62 +2,131 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const defaultError = (r, rr, n, e) => n(e || new Error('Server Error'));
-const defaultFail = { sendStatus: 401 };
+const useExpressErrorHandler = (r, rr, n, e) => n(e || new Error('Server Error'));
+const send401 = { sendStatus: 401 };
 
-const makeDefaults = () => ({
-  name: '_default',
-  clientType: 'client',
+const schema = {
+  name: { type: ['string'], default: '_default' },
+  clientType: { type: ['string'], default: 'client' },
+  isDefault: { type: ['boolean', 'undefined'], default: false },
   sessions: {
-    useSessions: false,
-    deserializeTactic: 'always',
-    serialize: (user) => user,
-    deserialize: (user) => user,
+    type: 'child',
+    children: {
+      useSessions: { type: ['boolean'], default: false },
+      deserializeTactic: { type: ['string'], default: 'always' },
+      serialize: { type: ['function'], default: (user) => user },
+      deserialize: { type: ['function'], default: (user) => user },
+    }
   },
   authenticate: {
-    extract: 'body',
-    getData: () => ({}),
-    verify: () => true,
-    setUser: (q, data) => data,
-    onError: defaultError,
-    onFail: defaultFail,
-    onSuccess: null,
-    selfInit: false,
+    type: 'child',
+    children: {
+      extract: { type: ['string', 'function'], default: 'body' },
+      getData: { type: ['function'], default: () => ({}) },
+      verify: { type: ['function'], default: () => true },
+      setUser: { type: ['function'], default: (q, data) => data },
+      onError: { type: ['null', 'function', 'object'], default: useExpressErrorHandler },
+      onFail: { type: ['null', 'function', 'object'], default: send401 },
+      onSuccess: { type: ['null', 'function', 'object'], default: null },
+      selfInit: { type: ['boolean'], default: false },
+    }
   },
   init: {
-    onError: defaultError,
-    onSuccess: null,
+    type: 'child',
+    children: {
+      onError: { type: ['null', 'function', 'object'], default: useExpressErrorHandler },
+      onSuccess: { type: ['null', 'function', 'object'], default: null },
+    }
   },
   checkAuthenticated: {
-    onFail: defaultFail,
-    onSuccess: null
+    type: 'child',
+    children: {
+      onFail: { type: ['null', 'function', 'object'], default: send401 },
+      onSuccess: { type: ['null', 'function', 'object'], default: null }
+    }
   },
   checkUnauthenticated: {
-    onFail: defaultFail,
-    onSuccess: null
+    type: 'child',
+    children: {
+      onFail: { type: ['null', 'function', 'object'], default: send401 },
+      onSuccess: { type: ['null', 'function', 'object'], default: null }
+    }
   },
   logout: {
-    onSuccess: null
+    type: 'child',
+    children: { onSuccess: { type: ['null', 'function', 'object'], default: null } }
   },
   deserializeUser: {
-    onError: defaultError,
-    onSuccess: null
+    type: 'child',
+    children: {
+      onError: { type: ['null', 'function', 'object'], default: useExpressErrorHandler },
+      onSuccess: { type: ['null', 'function', 'object'], default: null }
+    }
   }
-});
-
-const models = {
-  _default: makeDefaults()
 };
 
-const isObj = (x) => typeof x === 'object' && x !== null && !Array.isArray(x);
+const getType = (x) => {
+  const type = typeof x;
+  if (type !== 'object') return type;
+  if (x === null) return 'null';
+  if (Array.isArray(x)) return 'array';
+  return 'object';
+};
 
-const merge = (a, b, i = 0) => {
-  Object.keys(b).forEach((key) => {
-    if (a[key] === undefined) throw new Error(`Unknown option ${key}`);
-    if (isObj(a[key]) && isObj(b[key]) && i > 0) merge(a[key], b[key], i - 1);
-    else a[key] = b[key];
+const isObj = (x) => getType(x) === 'object';
+
+const parseOption = (option, input) => option.type.includes(getType(input));
+
+const build = (_schema) => {
+  const b = (schema, output) => {
+    Object.keys(schema).forEach((key) => {
+      if (schema[key].type === 'child') {
+        output[key] = {};
+        b(schema[key].children, output[key]);
+      } else {
+        if (!parseOption(schema[key], schema[key].default)) {
+          throw new Error(`${key} must be of the following type/s: ${schema[key].type} is of type ${getType(schema[key].default)})}`);
+        }
+        output[key] = schema[key].default;
+      }
+    });
+    return output;
+  };
+  return b(_schema, {});
+};
+
+const merge = (_schema, _input) => {
+  const m = (schema, input, output) => {
+    Object.keys(input).forEach((key) => {
+      if (schema[key] === undefined) throw new Error(`Unknown option ${key}`);
+      if (isObj(schema[key]) && schema[key].type === 'child') {
+        m(schema[key].children, input[key], output[key]);
+      } else {
+        if (!parseOption(schema[key], input[key])) throw new Error(`${key} must be of the following type/s: ${schema[key].type} is of type ${getType(input[key])})}`);
+        output[key] = input[key];
+      }
+    });
+    return output;
+  };
+  return m(_schema, _input, build(_schema));
+};
+
+const parse = (schema, input) => {
+  Object.keys(input).forEach((key) => {
+    if (schema[key] === undefined) throw new Error(`Unknown option ${key}`);
+    if (isObj(schema[key]) && schema[key].type === 'child') {
+      parse(schema[key].children, input[key]);
+    } else if (!parseOption(schema[key], input[key])) throw new Error(`${key} must be of the following type/s: ${schema[key].type} is of type ${getType(input[key])})}`);
   });
-  return a;
+  return true;
+};
+
+const buildDefault = () => build(schema);
+const merge$1 = (input) => merge(schema, input);
+const parse$1 = (input) => parse(schema, input);
+
+const models = {
+  _default: buildDefault()
 };
 
 const defineModel = (model, options, isDefault) => {
@@ -68,9 +137,8 @@ const defineModel = (model, options, isDefault) => {
     model = model.name;
   }
   // First model defined is always set to default unless explicitly set to false
-  if (models.length < 2 && isDefault !== false) isDefault = true;
-
-  models[model] = merge(makeDefaults(), options, 1);
+  if (Object.keys(models).length < 2 && isDefault !== false) isDefault = true;
+  models[model] = merge$1(options);
   models[model].name = model; // name overridden by model name if specified
   models[model].isDefault = isDefault; // is default cannot be declared in options obj by design
   if (isDefault) {
@@ -118,20 +186,14 @@ const makeResponder = (end, type) => {
 };
 
 const getOptionsObject = (modelName) => {
-  if (modelName && !models[modelName]) throw new Error('model is not set');
+  if (modelName && !models[modelName]) throw new Error(`Model ${modelName} is not set`);
   return models[modelName || '_default'];
 };
 
-const parseOptions = (options) => {
-  if (typeof options.authenticate.verify !== 'function') throw new Error('verify must be a function');
-  if (typeof options.authenticate.getData !== 'function') throw new Error('getUser must be a function');
-  return options;
-};
-
-const buildOptions2 = (modelName, overrides, prefix) => {
+const buildOptions = (modelName, overrides, prefix) => {
   const options = { ...getOptionsObject(modelName) };
   options[prefix] = { ...options[prefix], ...overrides };
-  parseOptions(options);
+  parse$1(options);
   return options;
 };
 
@@ -186,7 +248,7 @@ const init = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions2(modelName, overrides, 'init');
+  const options = buildOptions(modelName, overrides, 'init');
 
   if (!options.sessions.useSessions) return noSessionInit(options);
 
@@ -218,9 +280,9 @@ const init = (modelName, overrides) => {
 const authenticate = (modelName, overrides) => {
   if (typeof modelName === 'object') {
     overrides = modelName;
-    modelName = null;
+    modelName = '_default';
   }
-  const options = buildOptions2(modelName, overrides, 'authenticate');
+  const options = buildOptions(modelName, overrides, 'authenticate');
   const { clientType, name } = options;
   const {
     verify, getData, setUser
@@ -252,7 +314,7 @@ const authenticate = (modelName, overrides) => {
   };
 
   const middleware = [];
-  if (options.authenticate.selfInit) middleware.push(init(options));
+  if (options.authenticate.selfInit) middleware.push(init(options.init));
   middleware.push(authFunction);
   if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
   if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));
@@ -266,7 +328,7 @@ const checkUnauthenticated = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions2(modelName, overrides, 'checkUnauthenticated').checkUnauthenticated;
+  const options = buildOptions(modelName, overrides, 'checkUnauthenticated').checkUnauthenticated;
   const onFail = makeResponder(options.onFail, 'checkUnauthenticated.OnFail');
   if (!options.onSuccess) {
     return (req, res, next) => {
@@ -286,7 +348,7 @@ const checkAuthenticated = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions2(modelName, overrides, 'checkAuthenticated').checkAuthenticated;
+  const options = buildOptions(modelName, overrides, 'checkAuthenticated').checkAuthenticated;
   const onFail = makeResponder(options.onFail, 'checkAuthenticated.OnFail');
   if (!options.onSuccess) {
     return (req, res, next) => {
@@ -306,7 +368,7 @@ const logout = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions2(modelName, overrides, 'logout');
+  const options = buildOptions(modelName, overrides, 'logout');
   if (!options.sessions.useSessions) throw new Error('Cannot use Logout middleware when use sessions set false in model');
   const logoutMiddleware = (req, res, next) => {
     delete req.user;
@@ -326,7 +388,7 @@ const deserializeUser = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const { onError: onErrorRaw, onSuccess } = buildOptions2(modelName, overrides, 'deserializeUser').deserializeUser;
+  const { onError: onErrorRaw, onSuccess } = buildOptions(modelName, overrides, 'deserializeUser').deserializeUser;
   const onError = makeResponder(onErrorRaw, 'deserializeUserOnError');
   const deserializeMiddleware = (req, res, next) => {
     if (!req.user) return next();

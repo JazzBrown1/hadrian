@@ -1,12 +1,12 @@
-import defineModel from './middleware/defineModel';
-import modifyModel from './middleware/modifyModel';
+import defineModel from './misc/defineModel';
+import modifyModel from './misc/modifyModel';
 import authenticate from './middleware/authenticate';
 import { checkAuthenticated, checkUnauthenticated } from './middleware/checkAuthenticated';
 import logout from './middleware/logout';
 import init from './middleware/init';
 import deserializeUser from './middleware/deserializeUser';
 import models from './options/models';
-import Fail from './Fail';
+import Fail from './misc/Fail';
 
 export {
   defineModel,

@@ -1,6 +1,8 @@
-import { checkAuthenticatedBasic, checkUnauthenticatedBasic } from './checkAuthenticated';
+// FUTURE DEV NOT IN BUNDLE
+
+import { checkAuthenticatedBasic, checkUnauthenticatedBasic } from './checkAuthenticatedForCheckAuthentication';
 import buildOptions from '../options/buildOptions';
-import makeResponder from '../options/makeResponder';
+import makeResponder from '../constructors/makeResponder';
 
 const checkAuthentication = (modelName, overrides) => {
   if (typeof modelName === 'object') {

@@ -14,8 +14,8 @@ describe('authenticate()', function () {
       body: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: false }, authenticate: { selfInit: true } });
-    expressChain(authenticate(modelName))(req, res, () => done());
+    defineModel(modelName, { sessions: { useSessions: false }, authenticate: { onFail: { send: 'test' }, selfInit: true, onSuccess: () => done() } }, true);
+    expressChain(authenticate(modelName))(req, res, () => {});
   });
   it('should save auth info to session object', function (done) {
     const modelName = shortid.generate();
@@ -229,7 +229,7 @@ describe('authenticate()', function () {
     defineModel(modelName, {
       authenticate: {
         selfInit: true,
-        onSuccess: () => done(),
+        onSuccess: function jazzs() { done(); },
       },
       sessions: {
         useSessions: false,

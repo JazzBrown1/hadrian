@@ -1,7 +1,6 @@
 import models from '../options/models';
-import makeDefaults from '../options/makeDefaults';
 
-import merge from '../util/mergeObject';
+import { merge } from '../options/optionsFunctions';
 
 const defineModel = (model, options, isDefault) => {
   if (typeof model === 'object') {
@@ -11,9 +10,8 @@ const defineModel = (model, options, isDefault) => {
     model = model.name;
   }
   // First model defined is always set to default unless explicitly set to false
-  if (models.length < 2 && isDefault !== false) isDefault = true;
-
-  models[model] = merge(makeDefaults(), options, 1);
+  if (Object.keys(models).length < 2 && isDefault !== false) isDefault = true;
+  models[model] = merge(options);
   models[model].name = model; // name overridden by model name if specified
   models[model].isDefault = isDefault; // is default cannot be declared in options obj by design
   if (isDefault) {

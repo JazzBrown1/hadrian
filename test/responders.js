@@ -233,6 +233,6 @@ describe('responders', function () {
   it('allow props without prefix when passed to middleware is set', function () {
     const modelName = shortid.generate();
     defineModel(modelName, { sessions: { useSessions: false } });
-    checkAuthenticated(modelName, { onFail: { redirect: ' /' }, onError: { redirect: ' /' }, onSuccess: { redirect: ' /' } });
+    checkAuthenticated(modelName, { onFail: { redirect: ' /' }, onSuccess: { redirect: ' /' } });
   });
 });

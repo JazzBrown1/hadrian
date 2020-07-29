@@ -54,7 +54,7 @@ defineModel(
     authenticate: {
       extract: 'body',
       getData: (query) => db.findUserByUsername(query.username),
-      verify: (query, data) => query.password === data.password,
+      verify: (query, data) => query.password && query.password === data.password,
       setUser: (query, data) => data,
     },
     sessions: {

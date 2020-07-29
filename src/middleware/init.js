@@ -1,6 +1,6 @@
-import { buildOptions2 } from '../options/buildOptions';
-import makeResponder from '../options/makeResponder';
-import { alwaysDeserializeInit, manualDeserializeInit } from '../options/deserializers';
+import buildOptions from '../options/buildOptions';
+import makeResponder from '../constructors/makeResponder';
+import { alwaysDeserializeInit, manualDeserializeInit } from '../misc/deserializers';
 
 const noSessionInit = (options) => {
   if (options.init.onSuccess) {
@@ -21,7 +21,7 @@ const init = (modelName, overrides) => {
     overrides = modelName;
     modelName = null;
   }
-  const options = buildOptions2(modelName, overrides, 'init');
+  const options = buildOptions(modelName, overrides, 'init');
 
   if (!options.sessions.useSessions) return noSessionInit(options);
 

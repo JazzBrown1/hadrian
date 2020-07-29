@@ -1,7 +1,7 @@
-import makeDefaults from './makeDefaults';
+import { buildDefault } from './optionsFunctions';
 
 const models = {
-  _default: makeDefaults()
+  _default: buildDefault()
 };
 
 export default models;

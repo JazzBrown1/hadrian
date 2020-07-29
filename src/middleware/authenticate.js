@@ -1,16 +1,16 @@
-import makeExtractor from '../options/makeExtractor';
-import makeResponder from '../options/makeResponder';
-import { buildOptions2 } from '../options/buildOptions';
+import makeExtractor from '../constructors/makeExtractor';
+import makeResponder from '../constructors/makeResponder';
+import buildOptions from '../options/buildOptions';
 import saveSession from './saveSession';
 import init from './init';
-import { alwaysDeserializeAuth, manualDeserializeAuth } from '../options/deserializers';
+import { alwaysDeserializeAuth, manualDeserializeAuth } from '../misc/deserializers';
 
 const authenticate = (modelName, overrides) => {
   if (typeof modelName === 'object') {
     overrides = modelName;
-    modelName = null;
+    modelName = '_default';
   }
-  const options = buildOptions2(modelName, overrides, 'authenticate');
+  const options = buildOptions(modelName, overrides, 'authenticate');
   const { clientType, name } = options;
   const {
     verify, getData, setUser
@@ -42,7 +42,7 @@ const authenticate = (modelName, overrides) => {
   };
 
   const middleware = [];
-  if (options.authenticate.selfInit) middleware.push(init(options));
+  if (options.authenticate.selfInit) middleware.push(init(options.init));
   middleware.push(authFunction);
   if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
   if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));

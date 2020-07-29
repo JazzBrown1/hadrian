@@ -1,7 +1,7 @@
 // FUTURE DEV NOT IN BUNDLE
 
 /* eslint-disable max-len */
-import makeResponder from '../options/makeResponder';
+import makeResponder from '../constructors/makeResponder';
 import buildOptions from '../options/buildOptions';
 
 const checkAuthenticatedBasic = (modelName, overrides, wrapperName) => {
