@@ -1,4 +1,4 @@
-# Hadrian V2.0.0-alpha
+# Hadrian
 > Fast and versatile authentication middleware for Express.js.
 
 [![Version][npm-version]][npm-url]
@@ -67,7 +67,7 @@ defineModel(
 The second argument will set this model to default (meaning it will not have to be referenced in the middleware).
 
 
-The init() middleware must be called if at the start of the request straight after any session and parsing middleware.
+The init() middleware must be called before any other authenitcation middleware and after parsing and sessions middleware(If sessions are required).
 
 ```sh
 app.use(json({ extended: false }));
