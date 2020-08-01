@@ -12,10 +12,11 @@ const expressChain = (input) => {
   const arr = flatDeep(input, Infinity);
   return (req, res, done) => {
     let index = 0;
-    const next = () => {
+    const next = (err) => {
+      if (err) return done(req, res, err);
       if (index < arr.length) {
         arr[index++](req, res, next);
-      } else done(req, res);
+      } else done(req, res, err);
     };
     next();
   };

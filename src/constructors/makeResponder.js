@@ -18,7 +18,6 @@ const statusEnd = (status) => (req, res) => res.sendStatus(status);
 
 const makeResponder = (end, type) => {
   if (typeof end === 'function') return end;
-  if (typeof end !== 'object') throw new Error(`Invalid ${type} input, type ${typeof end} - ${end}`);
   if (end.redirect) return redirectEnd(end.redirect, end.status);
   if (end.send) return sendEnd(end.send, end.status);
   if (end.json) return jsonEnd(end.json, end.status);

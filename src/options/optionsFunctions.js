@@ -1,8 +1,8 @@
 import schema from './optionsSchema';
-import { build as b, merge as m, parse as p } from '../util/options';
+import m from '../util/options';
 
-const buildDefault = () => b(schema);
-const merge = (input) => m(schema, input);
-const parse = (input) => p(schema, input);
+const buildDefault = () => m(schema);
+const merge = (input, input2) => m(schema, input, input2);
+const parse = (input) => m(schema, {}, input);
 
 export { merge, buildDefault, parse };

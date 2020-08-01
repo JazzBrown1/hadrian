@@ -242,16 +242,32 @@ describe('authenticate()', function () {
   it('allows you to omit model name and pass overrides as first argument', function (done) {
     const modelName = shortid.generate();
     const req = {
-      body: {},
-      hadrian: {
-        isAuthenticated: false
-      }
+      body: {}
     };
     const res = {};
     defineModel(modelName, {
+      authenticate: { selfInit: true },
       sessions: { useSessions: false },
+    }, true);
+    expressChain(authenticate({
+      onSuccess: () => done(),
+      onError: () => { throw Error('should not call onError'); },
+      onFail: () => { throw Error('should not call onSuccess'); }
+    }))(req, res, () => {
+      throw new Error('this should never happen');
     });
-    expressChain(authenticate({ onSuccess: () => done() }))(req, res, () => {
+  });
+  it('calls on Error if serializer throws error', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+    };
+    const res = {};
+    defineModel(modelName, {
+      authenticate: { selfInit: true },
+      sessions: { useSessions: true, serialize: () => { throw new Error('Error'); } }
+    });
+    expressChain(authenticate(modelName, { onError: () => done() }))(req, res, () => {
       throw new Error('this should never happen');
     });
   });

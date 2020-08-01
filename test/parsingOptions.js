@@ -20,4 +20,38 @@ describe('defineModel()', function () {
       done();
     }
   });
+  it('throw error if array passed into options instead of string', function (done) {
+    const modelName = shortid.generate();
+    try {
+      defineModel(modelName, { name: [] });
+    } catch (err) {
+      done();
+    }
+  });
+  it('throw error if unknown property passed to options', function (done) {
+    const modelName = shortid.generate();
+    try {
+      defineModel(modelName, { shouldError: true });
+    } catch (err) {
+      done();
+    }
+  });
+  it('throw error if unknown property passed to middleware', function (done) {
+    const modelName = shortid.generate();
+    try {
+      defineModel(modelName);
+      authenticate(modelName, { shouldError: true });
+    } catch (err) {
+      done();
+    }
+  });
+  it('throw error if wrong option type passed to middleware', function (done) {
+    const modelName = shortid.generate();
+    try {
+      defineModel(modelName);
+      authenticate(modelName, { onError: 'Error' });
+    } catch (err) {
+      done();
+    }
+  });
 });
