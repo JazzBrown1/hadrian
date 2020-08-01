@@ -1,8 +1,6 @@
 # Hadrian V2.0.0-alpha
 > Fast and versatile authentication middleware for Express.js.
 
-## WARNING! This readme is out of date
-
 [![Version][npm-version]][npm-url]
 [![Dependencies][npm-dependencies]][npm-url]
 [![Coverage Status](https://coveralls.io/repos/github/JazzBrown1/hadrian/badge.svg?branch=master)](https://coveralls.io/github/JazzBrown1/hadrian?branch=master)
@@ -46,7 +44,6 @@ You can provide a function for each of the authentication steps:
 
 The model can use sync or async functions.
 
-Proposed...
 ```sh
 defineModel(
   {
