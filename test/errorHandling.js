@@ -22,7 +22,15 @@ describe('default error handling', function () {
       body: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: false }, authenticate: { getData: () => { throw false; }, selfInit: true, onSuccess: () => { throw Error('called success'); } } }, true);
+    defineModel(modelName, {
+      sessions: { useSessions: false },
+      authenticate: {
+        // eslint-disable-next-line no-throw-literal
+        getData: () => { throw false; },
+        selfInit: true,
+        onSuccess: () => { throw Error('called success'); }
+      }
+    }, true);
     expressChain(authenticate(modelName))(req, res, (r, rr, error) => {
       done(assert.equal(Boolean(error.message), true));
     });
