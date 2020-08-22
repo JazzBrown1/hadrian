@@ -1,7 +1,7 @@
-const manualDeserializeInit = async (s, deserialize) => async function getUser() {
-  if (this.deserializedUser) return this.deserializedUser;
-  const deserializedUser = deserialize(this.hadrian.user);
-  this.deserializedUser = deserializedUser;
+const manualDeserializeInit = async (s, deserialize, req) => async function getUser() {
+  if (req.deserializedUser) return req.deserializedUser;
+  const deserializedUser = deserialize(req.hadrian.user);
+  req.deserializedUser = deserializedUser;
   return deserializedUser;
 };
 

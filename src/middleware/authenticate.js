@@ -42,7 +42,7 @@ const authenticate = (modelName, overrides) => {
   };
 
   const middleware = [];
-  if (options.authenticate.selfInit) middleware.push(init(options.init));
+  if (options.authenticate.selfInit) middleware.push(init(modelName, { onError: options.onError }));
   middleware.push(authFunction);
   if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
   if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));

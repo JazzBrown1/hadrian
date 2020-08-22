@@ -197,10 +197,10 @@ const saveSession = (options, onError) => {
   };
 };
 
-const manualDeserializeInit = async (s, deserialize) => async function getUser() {
-  if (this.deserializedUser) return this.deserializedUser;
-  const deserializedUser = deserialize(this.hadrian.user);
-  this.deserializedUser = deserializedUser;
+const manualDeserializeInit = async (s, deserialize, req) => async function getUser() {
+  if (req.deserializedUser) return req.deserializedUser;
+  const deserializedUser = deserialize(req.hadrian.user);
+  req.deserializedUser = deserializedUser;
   return deserializedUser;
 };
 
@@ -301,7 +301,7 @@ const authenticate = (modelName, overrides) => {
   };
 
   const middleware = [];
-  if (options.authenticate.selfInit) middleware.push(init(options.init));
+  if (options.authenticate.selfInit) middleware.push(init(modelName, { onError: options.onError }));
   middleware.push(authFunction);
   if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
   if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));
@@ -394,7 +394,31 @@ class Fail extends Error {
   }
 }
 
+/* eslint-disable func-names */
+
+const Model = function (options, name) {
+  this.name = name || options.name;
+  defineModel(this.name, options);
+  this.options = options;
+  this.init = function (overrides) {
+    return init(this.name, overrides);
+  }.bind(this);
+  this.authenticate = function (overrides) {
+    return authenticate(this.name, overrides);
+  }.bind(this);
+  this.checkAuthenticated = function (overrides) {
+    return checkAuthenticated(this.name, overrides);
+  }.bind(this);
+  this.checkUnauthenticated = function (overrides) {
+    return checkUnauthenticated(this.name, overrides);
+  }.bind(this);
+  this.logout = function (overrides) {
+    return logout(this.name, overrides);
+  }.bind(this);
+};
+
 exports.Fail = Fail;
+exports.Model = Model;
 exports.authenticate = authenticate;
 exports.checkAuthenticated = checkAuthenticated;
 exports.checkUnauthenticated = checkUnauthenticated;

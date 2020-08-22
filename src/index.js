@@ -7,6 +7,7 @@ import init from './middleware/init';
 import deserializeUser from './middleware/deserializeUser';
 import models from './options/models';
 import Fail from './misc/Fail';
+import Model from './modelPrototype';
 
 export {
   defineModel,
@@ -19,5 +20,6 @@ export {
   checkAuthenticated,
   checkUnauthenticated,
   models,
-  Fail
+  Fail,
+  Model
 };

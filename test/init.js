@@ -13,6 +13,16 @@ describe('init()', function () {
     defineModel(modelName, { sessions: { useSessions: true, deserializeTactic: 'never' }, init: { onSuccess: () => done() } });
     expressChain(init(modelName))(req, res, () => {});
   });
+  it('lets you override defaults with first argument', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      session: {}
+    };
+    const res = {};
+    defineModel(modelName, { sessions: { useSessions: true, deserializeTactic: 'never' }, init: { onSuccess: () => { throw new Error('should never happen'); } } }, true);
+    expressChain(init({ onSuccess: () => done() }))(req, res, () => {});
+  });
   it('calls onError if deserialize throws error and onError is passed', function (done) {
     const modelName = shortid.generate();
     const req = {

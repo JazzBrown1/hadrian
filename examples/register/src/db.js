@@ -3,6 +3,8 @@ import hashPassword from 'hash-password';
 
 const pw = hashPassword();
 
+const wait = (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // The users database
 const users = {
   LxnvxHoI: {
