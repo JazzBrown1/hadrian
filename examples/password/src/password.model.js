@@ -1,11 +1,11 @@
 
-import { defineModel, Fail } from 'hadrian';
+import { Model, Fail } from 'hadrian';
 import { findUserByUserName } from './db';
 
 
-defineModel(
-  'password', // Authentication model name <optional> name prop in options is fine
+const auth = new Model(
   { // Authentication Model Options
+    name: 'password', // This should be unique when using multiple models
     authenticate: {
       extract: 'body', // this will extract req.body for the query can pass a function here (req, done) => done(error, query);
       getData: async (query) => {
@@ -33,5 +33,6 @@ defineModel(
       onFail: { redirect: '/' }
     },
   },
-  true // Set as default <optional> defaults to false
 );
+
+export default auth;

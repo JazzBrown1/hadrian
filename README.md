@@ -8,11 +8,9 @@
 
 Hadrian is a flexible and dynamic authentication middleware for express.js. It has been designed to be easy to use, modular, unopinionated and take the complexities out of building authentication into server apps.
 
-Hadrian aims to add a very low level abstraction for autentication in express apps, removing unneccasarry complexities while maintaing full flexibility to create and support any type of authentication strategy.
+Hadrian simplifies authentication in express apps, removing unnecessary complexities while maintaining full flexibility to create and support any type of authentication strategy.
 
-Hadrian is Quick! By preprocessing the authentication models at time of start up, Hadrian is able to handle requests with maximum efficency.
-
-As of version 2 the API has full async support and call callback functions have been removed. This is inline with the upcoming Express 5x release.
+Hadrian is Quick! By preprocessing the authentication models at time of start up, Hadrian is able to handle requests with maximum efficiency.
 
 ## Installation
 
@@ -30,46 +28,46 @@ $ npm install hadrian
 
 ## Usage
 
-Use the defineModel function to define an Authentication Model
+Create a new Model instance by calling new Model(options)
 
 You can provide a function for each of the authentication steps:
 
 - extract - (req) => query
 
-- getData - (query) => data
+- getData - (query, req) => data
 
-- verify - (query, data) => result
+- verify - (query, data, req) => result
 
-- setUser - (creds, data, result) => user
+- setUser - (query, data, result, req) => user
 
-The model can use sync or async functions.
+The above can be synchronous or asynchronous functions.
 
-```sh
-defineModel(
-  {
-    name: 'password',
-    authenticate: {
-      extract: 'body',
-      getData: (query) => db.findUserByUsername(query.username),
-      verify: (query, data) => query.password && query.password === data.password,
-      setUser: (query, data) => data,
+```javascript
+import { Model, Fail } from 'hadrian';
+
+const auth = new Model({
+  name: 'password',
+  authenticate: {
+    extract: 'body',
+    getData: async (query) => {
+      const user = await findUserByUserName(query.username);
+      if (!user) throw new Fail('Unknown User');
+      return user;
     },
-    sessions: {
-      useSessions: true,
-      serialize: (deserializedUser) => deserialziedUser.username,
-      deserialize: (serializedUser) => findUserByUsername(serialziedUser)
-    }
+    verify: (query, data) => query.password && query.password === data.password,
+    setUser: (query, data) => data,
   },
-  true
-);
+  sessions: {
+    useSessions: true,
+    serialize: (deserializedUser) => deserializedUser.username,
+    deserialize: (serializedUser) => findUserByUsername(serializedUser)
+  }
+});
 ```
-
-The second argument will set this model to default (meaning it will not have to be referenced in the middleware).
-
 
 The init() middleware must be called before any other authenitcation middleware and after parsing and sessions middleware(If sessions are required).
 
-```sh
+```javascript
 app.use(json({ extended: false }));
 app.use(
   session({
@@ -79,26 +77,26 @@ app.use(
   }),
 );
 
-app.use(init());
+app.use(auth.init());
 ```
 
 Use the authenticate() middleware to authenticate a client.
 
-```sh
-app.use('/login', checkUnauthenticated(), authenticate(), (req, res) => {
+```javascript
+app.use('/login', auth.checkUnauthenticated(), auth.authenticate(), (req, res) => {
   res.redirect('/home');
 });
 ```
 
 You can block access to routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
 
-```sh
-app.use('/api/private/', checkAuthenticated({ onFail: { redirect: '/login' } }), privateApiRoutes);
+```javascript
+app.use('/api/private/', auth.checkAuthenticated({ onFail: { redirect: '/login' } }), privateApiRoutes);
 ```
 
 You can set default onFail handlers in the Authenitcation model.
 
-```sh
+```javascript
 {
   //............
   checkAuthenticated: {
@@ -110,13 +108,11 @@ You can set default onFail handlers in the Authenitcation model.
 }
  ```
 
-In the above example we redirect the user using the hadrian shorthand and the equivelent express api.
+In the above example we redirect the user using the hadrian shorthand and the equivalent express api.
 
 You can use multiple authentication models in your app.
 
-When using multiple auth models, it is reccomended that you do not set a default model and explicity pass the model name as the first arguement in all hadrian middleware.
-
-```sh
+```javascript
 app.post(
   '/login',
   checkUnauthenticated('oauth-2'),

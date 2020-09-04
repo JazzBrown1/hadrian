@@ -1,13 +1,7 @@
 /* eslint-disable max-len */
 import makeResponder from '../constructors/makeResponder';
-import buildOptions from '../options/buildOptions';
 
-const checkUnauthenticated = (modelName, overrides) => {
-  if (typeof modelName === 'object') {
-    overrides = modelName;
-    modelName = null;
-  }
-  const options = buildOptions(modelName, overrides, 'checkUnauthenticated').checkUnauthenticated;
+const checkUnauthenticated = ({ checkUnauthenticated: options }) => {
   const onFail = makeResponder(options.onFail, 'checkUnauthenticated.OnFail');
   if (!options.onSuccess) {
     return (req, res, next) => {
@@ -22,12 +16,7 @@ const checkUnauthenticated = (modelName, overrides) => {
   };
 };
 
-const checkAuthenticated = (modelName, overrides) => {
-  if (typeof modelName === 'object') {
-    overrides = modelName;
-    modelName = null;
-  }
-  const options = buildOptions(modelName, overrides, 'checkAuthenticated').checkAuthenticated;
+const checkAuthenticated = ({ checkAuthenticated: options }) => {
   const onFail = makeResponder(options.onFail, 'checkAuthenticated.OnFail');
   if (!options.onSuccess) {
     return (req, res, next) => {

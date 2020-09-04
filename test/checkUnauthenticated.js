@@ -1,6 +1,6 @@
 var shortid = require('shortid');
 const expressChain = require('./expressChain');
-var { defineModel, checkUnauthenticated } = require('..');
+var { Model } = require('..');
 
 describe('checkUnauthenticated()', function () {
   it('should call next when not authenticated', function (done) {
@@ -12,8 +12,8 @@ describe('checkUnauthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: false } });
-    expressChain(checkUnauthenticated(modelName))(req, res, done);
+    const auth = new Model({ name: modelName, sessions: { useSessions: false } });
+    expressChain(auth.checkUnauthenticated())(req, res, done);
   });
   it('should call onFail when authenticated', function (done) {
     const modelName = shortid.generate();
@@ -27,11 +27,12 @@ describe('checkUnauthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: { useSessions: false },
       checkUnauthenticated: { onFail: () => done() }
     });
-    expressChain(checkUnauthenticated(modelName))(req, res, () => {
+    expressChain(auth.checkUnauthenticated())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
@@ -44,11 +45,12 @@ describe('checkUnauthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: { useSessions: false },
       checkUnauthenticated: { onSuccess: () => done() }
     });
-    expressChain(checkUnauthenticated(modelName))(req, res, () => {
+    expressChain(auth.checkUnauthenticated())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
@@ -64,11 +66,12 @@ describe('checkUnauthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: { useSessions: false },
       checkUnauthenticated: { onFail: () => done(), onSuccess: () => {} }
     });
-    expressChain(checkUnauthenticated(modelName))(req, res, () => {
+    expressChain(auth.checkUnauthenticated())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
@@ -81,11 +84,12 @@ describe('checkUnauthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: { useSessions: false },
       checkUnauthenticated: { onSuccess: () => done() },
     }, true);
-    expressChain(checkUnauthenticated())(req, res, () => {
+    expressChain(auth.checkUnauthenticated())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
@@ -98,10 +102,11 @@ describe('checkUnauthenticated()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: { useSessions: false },
     }, true);
-    expressChain(checkUnauthenticated({ onSuccess: () => done() }))(req, res, () => {
+    expressChain(auth.checkUnauthenticated({ onSuccess: () => done() }))(req, res, () => {
       throw new Error('this should never happen');
     });
   });

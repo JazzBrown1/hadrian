@@ -1,8 +1,8 @@
 var shortid = require('shortid');
-var { defineModel, init } = require('..');
+var { Model } = require('..');
 const expressChain = require('./expressChain');
 
-describe('init()', function () {
+describe('auth.init()', function () {
   it('calls onSuccess when passed', function (done) {
     const modelName = shortid.generate();
     const req = {
@@ -10,8 +10,8 @@ describe('init()', function () {
       session: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: true, deserializeTactic: 'never' }, init: { onSuccess: () => done() } });
-    expressChain(init(modelName))(req, res, () => {});
+    const auth = new Model({ name: modelName, sessions: { useSessions: true, deserializeTactic: 'never' }, init: { onSuccess: () => done() } });
+    expressChain(auth.init())(req, res, () => {});
   });
   it('lets you override defaults with first argument', function (done) {
     const modelName = shortid.generate();
@@ -20,8 +20,8 @@ describe('init()', function () {
       session: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: true, deserializeTactic: 'never' }, init: { onSuccess: () => { throw new Error('should never happen'); } } }, true);
-    expressChain(init({ onSuccess: () => done() }))(req, res, () => {});
+    const auth = new Model({ name: modelName, sessions: { useSessions: true, deserializeTactic: 'never' }, init: { onSuccess: () => { throw new Error('should never happen'); } } }, true);
+    expressChain(auth.init({ onSuccess: () => done() }))(req, res, () => {});
   });
   it('calls onError if deserialize throws error and onError is passed', function (done) {
     const modelName = shortid.generate();
@@ -38,14 +38,15 @@ describe('init()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: {
         useSessions: true,
         deserialize: (user, done2) => done2(true, false)
       },
       init: { onError: () => done() }
     });
-    expressChain(init(modelName))(req, res, () => {});
+    expressChain(auth.init())(req, res, () => {});
   });
   it('calls next when no user login but hadrian session exists', function (done) {
     const modelName = shortid.generate();
@@ -58,8 +59,8 @@ describe('init()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: true } });
-    expressChain(init(modelName))(req, res, () => { done(); });
+    const auth = new Model({ name: modelName, sessions: { useSessions: true } });
+    expressChain(auth.init())(req, res, () => { done(); });
   });
   it('calls success middleware when onSuccess is set and useSessions is false', function (done) {
     const modelName = shortid.generate();
@@ -72,7 +73,11 @@ describe('init()', function () {
       }
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: false }, init: { onSuccess: () => done() } });
-    expressChain(init(modelName))(req, res, () => { throw new Error('This should never happen'); });
+    const auth = new Model({
+      name: modelName,
+      sessions: { useSessions: false },
+      init: { onSuccess: () => done() }
+    });
+    expressChain(auth.init())(req, res, () => { throw new Error('This should never happen'); });
   });
 });

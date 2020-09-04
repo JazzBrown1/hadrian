@@ -1,9 +1,9 @@
 var assert = require('assert');
 var shortid = require('shortid');
-var { defineModel, logout } = require('..');
+var { Model } = require('..');
 const expressChain = require('./expressChain');
 
-describe('logout()', function () {
+describe('auth.logout()', function () {
   it('removes auth and updates isAuthenticated prop', function (done) {
     const modelName = shortid.generate();
     const req = {
@@ -20,9 +20,9 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { sessions: { useSessions: true } });
+    const auth = new Model({ name: modelName, sessions: { useSessions: true } });
     const res = {};
-    logout(modelName)(req, res, () => {
+    auth.logout()(req, res, () => {
       assert.equal(req.hadrian.isAuthenticated, false);
       assert.equal(Object.keys(req.hadrian.auth).length, 0);
       done();
@@ -30,8 +30,8 @@ describe('logout()', function () {
   });
   it('throws error if use sessions set to false', function (done) {
     const modelName = shortid.generate();
-    defineModel(modelName, { sessions: { useSessions: false } });
-    try { logout(modelName); } catch (err) { done(); }
+    const auth = new Model({ name: modelName, sessions: { useSessions: false } });
+    try { auth.logout(); } catch (err) { done(); }
   });
   it('calls onSuccess() if set', function (done) {
     const modelName = shortid.generate();
@@ -49,9 +49,13 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { sessions: { useSessions: true }, logout: { onSuccess: () => done() } });
+    const auth = new Model({
+      name: modelName,
+      sessions: { useSessions: true },
+      logout: { onSuccess: () => done() }
+    });
     const res = {};
-    expressChain(logout(modelName))(req, res, () => {
+    expressChain(auth.logout())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
@@ -71,9 +75,13 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { sessions: { useSessions: true }, logout: { onSuccess: () => done() } }, true);
+    const auth = new Model({
+      name: modelName,
+      sessions: { useSessions: true },
+      logout: { onSuccess: () => done() }
+    }, true);
     const res = {};
-    expressChain(logout())(req, res, () => {
+    expressChain(auth.logout())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
@@ -93,9 +101,9 @@ describe('logout()', function () {
         }
       }
     };
-    defineModel(modelName, { sessions: { useSessions: true } });
+    const auth = new Model({ name: modelName, sessions: { useSessions: true } });
     const res = {};
-    expressChain(logout({ onSuccess: () => done() }))(req, res, () => {
+    expressChain(auth.logout({ onSuccess: () => done() }))(req, res, () => {
       throw new Error('this should never happen');
     });
   });

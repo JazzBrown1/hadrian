@@ -39,5 +39,13 @@
   },
   "peerDependencies": {
     "express": "4.x"
+  },
+  "dependencies": {
+    "ez-options": "^0.2.3"
+  },
+  "nyc": {
+    "ignore-class-method": [
+      "_interopDefault"
+    ]
   }
 }

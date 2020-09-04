@@ -1,7 +1,7 @@
 var assert = require('assert');
-var shortid = require('shortid');
+// var shortid = require('shortid');
 var {
-  defineModel, authenticate, init, Fail
+  Model, Fail
 } = require('..');
 
 // completely inefficient helper function for testing
@@ -9,224 +9,212 @@ const expressChain = require('./expressChain');
 
 describe('authenticate()', function () {
   it('should successfully authenticate with default settings', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {}
     };
     const res = {};
-    defineModel({ name: modelName, sessions: { useSessions: false }, authenticate: { onFail: { send: 'test' }, selfInit: true, onSuccess: () => done() } }, true);
-    expressChain(authenticate(modelName))(req, res, () => {});
+    const ops = new Model({ name: 'name', sessions: { useSessions: false }, authenticate: { onFail: () => {}, selfInit: true, onSuccess: () => done() } });
+    expressChain(ops.authenticate())(req, res, () => {});
   });
   it('should save auth info to session object', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: true }, authenticate: { selfInit: true } });
-    expressChain(authenticate(modelName))(req, res, () => {
-      assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
+    const { authenticate } = new Model({ name: 'name', sessions: { useSessions: true }, authenticate: { selfInit: true } });
+    expressChain(authenticate())(req, res, () => {
+      assert.equal(Boolean(req.session.hadrian.auth.name), true);
       done();
     });
   });
   it('calls onsuccess instead of next when set', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: true }, authenticate: { selfInit: true } });
-    expressChain(authenticate(modelName))(req, res, () => {
-      assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
+    const { authenticate } = new Model({ name: 'name', sessions: { useSessions: true }, authenticate: { selfInit: true } });
+    expressChain(authenticate())(req, res, () => {
+      assert.equal(Boolean(req.session.hadrian.auth.name), true);
       done();
     });
   });
   it('should import options from default', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
+      name: 'name',
       authenticate: {
         selfInit: true,
         onSuccess: () => {
-          assert.equal(Boolean(req.session.hadrian.auth[modelName]), true);
+          assert.equal(Boolean(req.session.hadrian.auth.name), true);
           done();
         }
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if verify passes falsy result', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onFail: () => done(),
         verify: () => false
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if verify throws Fail', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onFail: () => done(),
         verify: () => { throw new Fail('failed to verify'); }
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if getData throws Fail', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onFail: () => done(),
         getData: () => { throw new Fail('Failed to get User'); }
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if extract throws Fail', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onFail: () => done(),
         extract: () => { throw new Fail('Couldnt Extract'); }
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if verify passes error', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onError: () => done(),
         verify: (a, b, done2) => done2(true, false)
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if getData passes error', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onError: () => done(),
         getData: (a, done2) => done2(true, false)
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('onFail called if extract passes error', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       sessions: { useSessions: true },
       authenticate: {
         selfInit: true,
         onError: () => done(),
         extract: (a, done2) => done2(true, false)
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
   it('throws an error if model not set', function (done) {
     try {
-      defineModel('test', { clientType: 'test' });
+      const { authenticate } = new Model('test', { clientType: 'test' });
       authenticate('not_set');
     } catch (err) {
       done();
     }
   });
   it('works when separated from init()', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate, init } = new Model({
       sessions: { useSessions: false },
       authenticate: { selfInit: false }
-    }, true);
+    });
     expressChain([init(), authenticate()])(req, res, () => {
       done();
     });
   });
   it('uses default model when model name not provided', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       authenticate: {
         selfInit: true,
         onSuccess: function jazzs() { done(); },
@@ -234,21 +222,20 @@ describe('authenticate()', function () {
       sessions: {
         useSessions: false,
       }
-    }, true);
+    });
     expressChain(authenticate())(req, res, () => {
       throw new Error('this should never happen');
     });
   });
   it('allows you to omit model name and pass overrides as first argument', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       authenticate: { selfInit: true },
       sessions: { useSessions: false },
-    }, true);
+    });
     expressChain(authenticate({
       onSuccess: () => done(),
       onError: () => { throw Error('should not call onError'); },
@@ -258,17 +245,16 @@ describe('authenticate()', function () {
     });
   });
   it('calls on Error if serializer throws error', function (done) {
-    const modelName = shortid.generate();
     const req = {
       body: {},
       session: {},
     };
     const res = {};
-    defineModel(modelName, {
+    const { authenticate } = new Model({
       authenticate: { selfInit: true },
       sessions: { useSessions: true, serialize: () => { throw new Error('Error'); } }
     });
-    expressChain(authenticate(modelName, { onError: () => done() }))(req, res, () => {
+    expressChain(authenticate({ onError: () => done() }))(req, res, () => {
       throw new Error('this should never happen');
     });
   });

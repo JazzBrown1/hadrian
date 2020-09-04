@@ -1,4 +1,3 @@
-import buildOptions from '../options/buildOptions';
 import makeResponder from '../constructors/makeResponder';
 import { alwaysDeserializeInit, manualDeserializeInit } from '../misc/deserializers';
 
@@ -16,15 +15,8 @@ const noSessionInit = (options) => {
   };
 };
 
-const init = (modelName, overrides) => {
-  if (typeof modelName === 'object') {
-    overrides = modelName;
-    modelName = null;
-  }
-  const options = buildOptions(modelName, overrides, 'init');
-
+const init = (options) => {
   if (!options.sessions.useSessions) return noSessionInit(options);
-
   const { deserialize, deserializeTactic } = options.sessions;
   const onError = makeResponder(options.init.onError, 'init.onError');
   const deserializer = deserializeTactic === 'always' ? alwaysDeserializeInit : manualDeserializeInit;

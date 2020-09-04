@@ -1,11 +1,11 @@
 import express, { json, urlencoded } from 'express';
 import session from 'express-session';
 
-import {
-  authenticate, checkAuthenticated, checkUnauthenticated, init, logout
-} from 'hadrian';
+import auth from './password.model';
 
-import './password.model';
+const {
+  authenticate, checkAuthenticated, checkUnauthenticated, init, logout
+} = auth;
 
 // Make express app
 const app = express();
@@ -33,7 +33,7 @@ app.get('/', checkAuthenticated(), (req, res) => {
   const run = async () => {
     const user = await req.user();
     res.render('home', { user });
-  }
+  };
   run();
 });
 

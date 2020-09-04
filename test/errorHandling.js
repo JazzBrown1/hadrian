@@ -1,6 +1,6 @@
 var shortid = require('shortid');
 var assert = require('assert');
-var { defineModel, authenticate } = require('..');
+var { Model } = require('..');
 
 const expressChain = require('./expressChain');
 
@@ -11,8 +11,8 @@ describe('default error handling', function () {
       body: {}
     };
     const res = {};
-    defineModel(modelName, { sessions: { useSessions: false }, authenticate: { getData: () => { throw Error('ERROR'); }, selfInit: true, onSuccess: () => { throw Error('called success'); } } }, true);
-    expressChain(authenticate(modelName))(req, res, (r, rr, error) => {
+    const auth = new Model({ name: modelName, sessions: { useSessions: false }, authenticate: { getData: () => { throw Error('ERROR'); }, selfInit: true, onSuccess: () => { throw Error('called success'); } } }, true);
+    expressChain(auth.authenticate())(req, res, (r, rr, error) => {
       done(assert.equal(error.message, 'ERROR'));
     });
   });
@@ -22,7 +22,8 @@ describe('default error handling', function () {
       body: {}
     };
     const res = {};
-    defineModel(modelName, {
+    const auth = new Model({
+      name: modelName,
       sessions: { useSessions: false },
       authenticate: {
         // eslint-disable-next-line no-throw-literal
@@ -30,8 +31,8 @@ describe('default error handling', function () {
         selfInit: true,
         onSuccess: () => { throw Error('called success'); }
       }
-    }, true);
-    expressChain(authenticate(modelName))(req, res, (r, rr, error) => {
+    });
+    expressChain(auth.authenticate())(req, res, (r, rr, error) => {
       done(assert.equal(Boolean(error.message), true));
     });
   });

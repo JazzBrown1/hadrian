@@ -1,7 +1,7 @@
 class Fail extends Error {
   constructor(message) {
-    super(message); // (1)
-    this.name = 'ValidationError'; // (2)
+    super(message);
+    this.name = 'ValidationError';
     this.reason = message;
     this.isFail = true;
   }
