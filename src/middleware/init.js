@@ -5,7 +5,7 @@ const noSessionInit = (options) => {
   if (options.init.onSuccess) {
     const onSuccess = makeResponder(options.init.onSuccess, 'init.onSuccess');
     return (req, res, next) => {
-      req.hadrian = { isAuthenticated: false };
+      req.hadrian = { isAuthenticated: false, auth: {} };
       onSuccess(req, res, next);
     };
   }

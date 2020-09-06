@@ -1,36 +1,32 @@
-// FUTURE DEV NOT IN BUNDLE
-
-import { checkAuthenticatedBasic, checkUnauthenticatedBasic } from './checkAuthenticatedForCheckAuthentication';
-import buildOptions from '../options/buildOptions';
 import makeResponder from '../constructors/makeResponder';
 
-const checkAuthentication = (modelName, overrides) => {
-  if (typeof modelName === 'object') {
-    overrides = modelName;
-    modelName = null;
-  }
-  const options = buildOptions(modelName, overrides, 'checkAuthentication');
-  if (!options.filter && !options.is) throw new Error('checkAuthenticate requires a filter or is property');
-  if (options.is) {
-    if (options.is === 'authenticated') return checkAuthenticatedBasic(modelName, overrides, 'checkAuthentication');
-    if (options.is === 'unauthenticated') return checkUnauthenticatedBasic(modelName, overrides, 'checkAuthentication');
-    throw new Error('checkAuthentication is option must be either "authenticated" or "unauthenticated" ');
-  }
-  const { filter } = options;
-  const onFail = makeResponder(options.checkAuthenticationOnFail, 'checkAuthenticationOnFail');
+const checkSelf = (name) => (req) => Boolean(req.hadrian.auth[name]);
+const checkAny = (req) => req.hadrian.isAuthenticated;
 
-  const middleware = (req, res, next) => {
-    if (filter(Object.keys(req.hadrian.auth))) return onFail();
-    next();
+const checkAuthentication = (options) => {
+  // eslint-disable-next-line no-nested-ternary
+  const check = options.checkAuthentication.check ? options.checkAuthentication.check
+    : options.checkAuthentication.by === 'self' ? checkSelf(options.name)
+      : checkAny;
+  const checker = options.checkAuthentication.is ? check : (r) => !check(r);
+  const { onSuccess } = options.checkAuthentication;
+  const onFail = makeResponder(options.checkAuthentication.onFail);
+  const mw = (req, res, next) => {
+    if (checker(req)) next();
+    else onFail(req, res, next);
   };
-
-  if (options.checkAuthenticationOnSuccess) {
-    return [
-      middleware,
-      makeResponder(options.checkAuthenticationOnSuccess, 'checkAuthenticationOnSuccess')
-    ];
-  }
-  return middleware;
+  if (onSuccess) return [mw, makeResponder(onSuccess)];
+  return mw;
 };
 
-export default checkAuthentication;
+const checkAuthenticated = (options) => {
+  const ops = { ...options.checkAuthenticated, is: true };
+  return checkAuthentication(options.copy().merge({ checkAuthentication: ops }));
+};
+
+const checkUnauthenticated = (options) => {
+  const ops = { ...options.checkUnauthenticated, is: false };
+  return checkAuthentication(options.copy().merge({ checkAuthentication: ops }));
+};
+
+export { checkAuthentication, checkAuthenticated, checkUnauthenticated };

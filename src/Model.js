@@ -2,7 +2,7 @@
 
 import init from './middleware/init';
 import authenticate from './middleware/authenticate';
-import { checkAuthenticated, checkUnauthenticated } from './middleware/checkAuthenticated';
+import { checkAuthenticated, checkUnauthenticated } from './middleware/checkAuthentication';
 import logout from './middleware/logout';
 import optionsSchema from './options/optionsSchema';
 
@@ -15,9 +15,11 @@ const parseOptions = (options) => {
     || Array.isArray(options)) throw new Error('options argument must be an object');
 };
 
+const optionsConfig = { dieHard: process.env.NODE_ENV = 'production' };
+
 const Model = function (options) {
   parseOptions(options);
-  this.options = new Options(optionsSchema);
+  this.options = new Options(optionsSchema, optionsConfig);
   this.options.merge(options);
   this.init = function (overrides) {
     return init(copy(this.options, overrides && { init: overrides }));

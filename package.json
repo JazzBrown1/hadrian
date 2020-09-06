@@ -41,7 +41,7 @@
     "express": "4.x"
   },
   "dependencies": {
-    "ez-options": "^0.2.3"
+    "ez-options": "^0.2.5"
   },
   "nyc": {
     "ignore-class-method": [

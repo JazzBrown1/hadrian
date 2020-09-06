@@ -23,7 +23,8 @@ describe('checkAuthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
@@ -44,6 +45,7 @@ describe('checkAuthenticated()', function () {
       body: {},
       hadrian: {
         isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
@@ -64,7 +66,8 @@ describe('checkAuthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
@@ -82,7 +85,8 @@ describe('checkAuthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};

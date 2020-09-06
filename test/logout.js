@@ -13,13 +13,14 @@ describe('auth.logout()', function () {
           isAuthenticated: true,
           user: 'someUser',
           auth: {
-            someModel: {
+            [modelName]: {
               someProp: 'prop'
             }
           }
         }
       }
     };
+    req.hadrian = req.session.hadrian;
     const auth = new Model({ name: modelName, sessions: { useSessions: true } });
     const res = {};
     auth.logout()(req, res, () => {
@@ -42,7 +43,7 @@ describe('auth.logout()', function () {
           isAuthenticated: true,
           user: 'someUser',
           auth: {
-            someModel: {
+            [modelName]: {
               someProp: 'prop'
             }
           }
@@ -55,10 +56,11 @@ describe('auth.logout()', function () {
       logout: { onSuccess: () => done() }
     });
     const res = {};
-    expressChain(auth.logout())(req, res, () => {
+    expressChain([auth.init(), auth.logout()])(req, res, () => {
       throw new Error('this should never happen');
     });
   });
+  // I think the below is redundant
   it('uses default model if model name is not passed', function (done) {
     const modelName = shortid.generate();
     const req = {
@@ -68,13 +70,14 @@ describe('auth.logout()', function () {
           isAuthenticated: true,
           user: 'someUser',
           auth: {
-            someModel: {
+            [modelName]: {
               someProp: 'prop'
             }
           }
         }
       }
     };
+    req.hadrian = req.session.hadrian;
     const auth = new Model({
       name: modelName,
       sessions: { useSessions: true },
@@ -85,7 +88,7 @@ describe('auth.logout()', function () {
       throw new Error('this should never happen');
     });
   });
-  it('uses overrides if passed as first argument', function (done) {
+  it('uses overrides passed as first argument', function (done) {
     const modelName = shortid.generate();
     const req = {
       body: {},
@@ -94,13 +97,14 @@ describe('auth.logout()', function () {
           isAuthenticated: true,
           user: 'someUser',
           auth: {
-            someModel: {
+            [modelName]: {
               someProp: 'prop'
             }
           }
         }
       }
     };
+    req.hadrian = req.session.hadrian;
     const auth = new Model({ name: modelName, sessions: { useSessions: true } });
     const res = {};
     expressChain(auth.logout({ onSuccess: () => done() }))(req, res, () => {

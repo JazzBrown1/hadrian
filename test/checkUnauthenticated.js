@@ -8,7 +8,8 @@ describe('checkUnauthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
@@ -22,7 +23,7 @@ describe('checkUnauthenticated()', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -41,7 +42,8 @@ describe('checkUnauthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
@@ -61,7 +63,7 @@ describe('checkUnauthenticated()', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -80,7 +82,8 @@ describe('checkUnauthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
@@ -98,7 +101,8 @@ describe('checkUnauthenticated()', function () {
     const req = {
       body: {},
       hadrian: {
-        isAuthenticated: false
+        isAuthenticated: false,
+        auth: {}
       }
     };
     const res = {};
