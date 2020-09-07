@@ -15,7 +15,7 @@ const parseOptions = (options) => {
     || Array.isArray(options)) throw new Error('options argument must be an object');
 };
 
-const optionsConfig = { dieHard: process.env.NODE_ENV = 'production' };
+const optionsConfig = { dieHard: process.env.NODE_ENV === 'production' };
 
 const Model = function (options) {
   parseOptions(options);

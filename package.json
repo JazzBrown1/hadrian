@@ -5,7 +5,7 @@
   "main": "dist/hadrian.js",
   "entry": "dist/hadrian.js",
   "scripts": {
-    "test": "nyc --reporter=lcov --reporter=text-summary mocha",
+    "test": "npm run build && nyc --reporter=lcov --reporter=text-summary mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "build": "rollup --config"
   },
