@@ -19,23 +19,21 @@ const users = {
   }
 };
 
-const findUserById = (id, cb) => {
-  if (!users[id]) return cb(null, null);
-  cb(null, users[id]);
+const findUserById = async (id) => {
+  await wait('50');
+  return users[id];
 };
 
-const findUserByUserName = (username, cb) => {
-  const user = Object.keys(users).find((key) => users[key].username === username);
-  cb(null, users[user]);
+const findUserByUserName = async (username) => {
+  await wait('50');
+  return Object.values(users).find((val) => val.username === username);
 };
 
-const insertUser = (username, password, cb) => {
-  findUserByUserName(username, (err, user) => {
-    if (user) return cb(null, null);
-    const insertedUser = { username, password, id: shortid.generate() };
-    users[insertedUser.id] = insertedUser;
-    cb(null, insertedUser);
-  });
+const insertUser = async (username, password) => {
+  await wait('50');
+  const insertedUser = { username, password, id: shortid.generate() };
+  users[insertedUser.id] = insertedUser;
+  return insertedUser;
 };
 
 export {

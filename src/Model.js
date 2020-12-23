@@ -8,7 +8,7 @@ import optionsSchema from './options/optionsSchema';
 
 const Options = require('ez-options');
 
-const copy = (options, overrides) => options.copy().merge(overrides);
+const copy = (options, overrides) => (overrides ? options.copy().merge(overrides) : options.copy());
 
 const parseOptions = (options) => {
   if (typeof options !== 'object'

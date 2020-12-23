@@ -1,65 +1,76 @@
 
-import { defineModel } from 'hadrian';
+import { Model, Fail } from 'hadrian';
 import hashPassword from 'hash-password';
 import { findUserByUserName, insertUser, findUserById } from './db';
 
 // Use hash-password to hash and salt passwords before saving to db
 const pw = hashPassword();
 
-const serialize = (user, done) => done(null, user.id);
+const serialize = (user) => user.id;
+const deserialize = (id) => findUserById(id);
 
-defineModel(
-  'password',
+const validateRegisterQuery = (query) => {
+  if (typeof query.username !== 'string' || query.username.length === 0) {
+    throw new Fail('You must specify a username');
+  } else if (typeof query.password !== 'string' || query.password.length === 0) {
+    throw new Fail('You must specify a password');
+  } else if (query.username === query.password) {
+    throw new Fail('Your username cannot be the same as your password');
+  }
+};
+
+const auth = new Model(
   {
-    useSessions: true,
-    deserializeTactic: 'always',
-    extract: 'body',
-    getUser: (query, done) => findUserByUserName(query.username, done),
-    verify: (query, user, done) => {
-      done(
-        null,
-        pw.validate(query.password, user.password)
-      );
+    name: 'password',
+    authenticate: {
+      extract: 'body',
+      getUser: async (query) => query.username && findUserByUserName(query.username),
+      verify: (query, user) => user && pw.validate(query.password, user.password),
+      onError: (req, res) => res.render('login', { error: 'internal server error' }),
+      onFail: (req, res) => res.render('login', { error: 'Password or username did not match! Try again' }),
+      onSuccess: (req, res) => res.render('success', { message: 'Log in successful', user: req.user })
     },
-    serialize,
-    deserialize: (id, done) => findUserById(id, done),
-    authenticateOnError: (req, res) => res.render('login', { error: 'internal server error' }),
-    authenticateOnFail: (req, res) => res.render('login', { error: 'Password or username did not match! Try again' }),
-    authenticateOnSuccess: (req, res) => res.render('success', { message: 'Log in successful', user: req.user }),
-    logoutOnSuccess: { redirect: '/login' },
-    checkAuthenticatedOnFail: { redirect: '/login' },
-    checkUnauthenticatedOnFail: { redirect: '/' }
-  },
-  true // Set as default <optional> defaults to false
+    sessions: {
+      useSessions: true,
+      serialize,
+      deserialize
+    },
+    logout: {
+      onSuccess: { redirect: '/login' },
+    },
+    checkAuthenticated: {
+      onFail: { redirect: '/login' }
+    },
+    checkUnauthenticated: {
+      onFail: { redirect: '/' }
+    }
+  }
 );
 
-defineModel('password_register', {
-  useSessions: true,
-  deserializeTactic: 'always',
-  extract: (req, done) => {
-    const query = req.body;
-    // perform validation in the extract function
-    if (typeof query.username !== 'string' || query.username.length === 0) {
-      return done(null, false, 'You must specify a username');
-    }
-    if (typeof query.password !== 'string' || query.password.length === 0) {
-      return done(null, false, 'You must specify a password');
-    }
-    if (query.username === query.password) {
-      return done(null, false, 'Your username cannot be the same as your password');
-    }
-    done(null, query);
+const register = new Model({
+  name: 'password_register',
+  sessions: {
+    useSessions: true,
+    serialize,
+    deserialize
   },
-  getUser: (query, done) => {
-    const password = pw.generate(query.password);
-    insertUser(query.username, password, (err, insertedUser) => {
-      if (err) return done(err);
-      if (!insertedUser) return done(null, false, 'username already registered');
-      done(null, insertedUser);
-    });
-  },
-  serialize,
-  authenticateOnError: (req, res) => res.render('register', { error: 'internal server error' }),
-  authenticateOnFail: (req, res, reason) => res.render('register', { error: reason }),
-  authenticateOnSuccess: (req, res) => res.render('success', { message: 'Registration successful', user: req.user }),
+  authenticate: {
+    extract: (req) => {
+      const query = req.body;
+      validateRegisterQuery(query);
+      return query;
+    },
+    getUser: async (query) => {
+      const password = pw.generate(query.password);
+      if (await findUserByUserName(query.username)) {
+        throw new Fail('Username already registered');
+      }
+      return insertUser(query.username, password);
+    },
+    onError: (req, res) => res.render('register', { error: 'internal server error' }),
+    onFail: (r, res, n, e, reason) => res.render('register', { error: reason }),
+    onSuccess: (req, res) => res.render('success', { message: 'Registration successful', user: req.user }),
+  }
 });
+
+export { auth, register };

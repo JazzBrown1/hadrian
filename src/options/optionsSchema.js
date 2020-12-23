@@ -16,6 +16,7 @@ const schema = {
   authenticate: {
     _parent,
     extract: { _property, types: ['string', 'function'], default: 'body' },
+    getUser: { _property, types: ['function', 'undefined'] },
     getData: { _property, types: ['function'], default: () => ({}) },
     verify: { _property, types: ['function'], default: () => true },
     setUser: { _property, types: ['function'], default: (q, data) => data },

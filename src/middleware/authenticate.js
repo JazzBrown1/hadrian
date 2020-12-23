@@ -7,8 +7,9 @@ import { alwaysDeserializeAuth, manualDeserializeAuth } from '../misc/deserializ
 const authenticate = (options) => {
   const { clientType, name } = options;
   const {
-    verify, getData, setUser
+    verify, setUser
   } = options.authenticate;
+  const getData = options.authenticate.getUser || options.authenticate.getData;
   const extract = makeExtractor(options.authenticate.extract);
   const onError = makeResponder(options.authenticate.onError, 'authenticate.onError');
   const onFail = makeResponder(options.authenticate.onFail, 'authenticate.onFail');
@@ -30,7 +31,7 @@ const authenticate = (options) => {
       next();
     };
     run().catch((err) => {
-      if (err.isFail) return onFail(req, res, next, err);
+      if (err.isFail) return onFail(req, res, next, err, err.reason);
       onError(req, res, next, err);
     });
   };
