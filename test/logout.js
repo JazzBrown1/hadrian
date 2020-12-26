@@ -111,4 +111,82 @@ describe('auth.logout()', function () {
       throw new Error('this should never happen');
     });
   });
+  it('uses overrides passed as first argument', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      session: {
+        hadrian: {
+          isAuthenticated: true,
+          user: 'someUser',
+          auth: {
+            [modelName]: {
+              someProp: 'prop'
+            }
+          }
+        }
+      }
+    };
+    req.hadrian = req.session.hadrian;
+    const auth = new Model({ name: modelName, sessions: { useSessions: true } });
+    const res = {};
+    expressChain(auth.logout({ onSuccess: () => done() }))(req, res, () => {
+      throw new Error('this should never happen');
+    });
+  });
+
+  it('logs out of associated auth model when there multiple auths', function () {
+    const modelName = shortid.generate();
+    const modelName2 = shortid.generate();
+    const req = {
+      body: {},
+      session: {
+        hadrian: {
+          isAuthenticated: true,
+          user: 'someUser',
+          auth: {
+            [modelName]: {
+              someProp: 'prop'
+            },
+            [modelName2]: {
+              someProp: 'prop'
+            }
+          }
+        }
+      }
+    };
+    req.hadrian = req.session.hadrian;
+    const auth = new Model({ name: modelName, sessions: { useSessions: true } });
+    const res = {};
+    expressChain(auth.logout())(req, res, () => {
+      if (req.session.hadrian.auth[modelName] || !req.session.hadrian.auth[modelName2]) throw new Error('this should never happen');
+    });
+  });
+  it('logs out of all when there multiple auths and logout:of:all selected', function () {
+    const modelName = shortid.generate();
+    const modelName2 = shortid.generate();
+    const req = {
+      body: {},
+      session: {
+        hadrian: {
+          isAuthenticated: true,
+          user: 'someUser',
+          auth: {
+            [modelName]: {
+              someProp: 'prop'
+            },
+            [modelName2]: {
+              someProp: 'prop'
+            }
+          }
+        }
+      }
+    };
+    req.hadrian = req.session.hadrian;
+    const auth = new Model({ name: modelName, sessions: { useSessions: true }, logout: { of: 'all' } });
+    const res = {};
+    expressChain(auth.logout())(req, res, () => {
+      if (req.session.hadrian.auth[modelName] || req.session.hadrian.auth[modelName2]) throw new Error('this should never happen');
+    });
+  });
 });

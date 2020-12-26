@@ -2,7 +2,7 @@
 
 import init from './middleware/init';
 import authenticate from './middleware/authenticate';
-import { checkAuthenticated, checkUnauthenticated } from './middleware/checkAuthentication';
+import { checkAuthenticated, checkUnauthenticated, checkAuthentication } from './middleware/checkAuthentication';
 import logout from './middleware/logout';
 import optionsSchema from './options/optionsSchema';
 
@@ -29,6 +29,9 @@ const Model = function (options) {
   }.bind(this);
   this.checkAuthenticated = function (overrides) {
     return checkAuthenticated(copy(this.options, overrides && { checkAuthenticated: overrides }));
+  }.bind(this);
+  this.checkAuthentication = function (overrides) {
+    return checkAuthentication(copy(this.options, overrides && { checkAuthentication: overrides }));
   }.bind(this);
   this.checkUnauthenticated = function (overrides) {
     return checkUnauthenticated(

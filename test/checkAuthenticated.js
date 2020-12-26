@@ -98,4 +98,25 @@ describe('checkAuthenticated()', function () {
       throw new Error('this should never happen');
     });
   });
+  it('uses a custom check function when passed to options', function (done) {
+    const modelName = shortid.generate();
+    const req = {
+      body: {},
+      hadrian: {
+        isAuthenticated: false,
+        auth: {}
+      }
+    };
+    const res = {};
+    const auth = new Model({
+      name: modelName,
+      sessions: { useSessions: false },
+      checkAuthentication: {
+        check: () => false
+      }
+    });
+    expressChain(auth.checkAuthentication({ onFail: () => done() }))(req, res, () => {
+      throw new Error('this should never happen');
+    });
+  });
 });

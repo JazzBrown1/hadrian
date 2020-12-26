@@ -11,15 +11,8 @@ const logoutOfAll = (req, res, next) => {
 };
 
 const logoutOfSelf = (name) => (req, res, next) => {
-  if (Object.keys(req.hadrian.auth).length <= 1) {
-    delete req.user;
-    req.hadrian = {
-      isAuthenticated: false,
-      auth: {}
-    };
-  } else {
-    delete req.hadrian.auth[name];
-  }
+  delete req.hadrian.auth[name];
+  if (Object.keys(req.hadrian.auth).length === 0) req.hadrian.isAuthenticated = false;
   req.session.hadrian = req.hadrian;
   next();
 };

@@ -1,7 +1,9 @@
-import { defineModel } from 'hadrian';
+import { Model } from 'hadrian';
 import { findClientById } from './db';
 
-defineModel('basic_auth', {
+
+// Incomplete
+const auth = new Model({
   useSessions: false,
   selfInit: true,
   getUser: (query, done) => findClientById(query.id, done),
@@ -18,3 +20,5 @@ defineModel('basic_auth', {
   authenticateOnFail: { json: { error: 'unauthorized' } },
   authenticateOnError: { json: { error: 'internal server error' } }
 }, true);
+
+export default auth;

@@ -7,7 +7,7 @@ import { findUserByUserName, insertUser, findUserById } from './db';
 const pw = hashPassword();
 
 const serialize = (user) => user.id;
-const deserialize = (id) => findUserById(id);
+const deserialize = async (id) => findUserById(id);
 
 const validateRegisterQuery = (query) => {
   if (typeof query.username !== 'string' || query.username.length === 0) {
