@@ -1,21 +1,26 @@
 
-import { defineModel } from 'hadrian';
+import { Model } from 'hadrian';
 import { findUserByUserName } from './db';
 
-defineModel(
-  'password', // Authentication model name <optional> name prop in options is fine
-  { // Authentication Model Options
-    extract: 'body', // this will extract req.body for the query can pass a function here (req, done) => done(error, query);
-    getUser: (query, done) => findUserByUserName(query.username, done),
-    verify: (query, user, done) => done(null, query.password === user.password),
-    serialize: (user, done) => done(null, user.username), // don't save passwords in sessions
-    deserialize: (user, done) => findUserByUserName(user, done),
-    authenticateOnFail: (req, res) => res.render('login', { error: 'Password or username did not match! Try again' }), // Accepts a response object or response function
-    authenticateOnSuccess: { redirect: '/' }, // equivalent to "(req, res) => res.redirect('/')"
-    logoutOnSuccess: { redirect: '/login' },
-    checkAuthenticatedOnFail: (req, res) => res.redirect('/login'),
-    checkUnauthenticatedOnFail: { redirect: '/' },
-    deserializeTactic: 'never' // req.user is a callback function that only deserializes user when required
+const auth = new Model({
+  name: 'password',
+  authenticate: {
+    extract: 'body',
+    getUser: (query) => findUserByUserName(query.username),
+    verify: (query, user) => user.password && query.password === user.password,
+    onFail: (req, res) => res.render('login', { error: 'Password or username did not match! Try again' })
   },
-  true // Set as default <optional> defaults to false
-);
+  sessions: {
+    useSessions: true,
+    serialize: (user) => user.username,
+    deserialize: (username) => findUserByUserName(username),
+  },
+  checkAuthenticated: {
+    onFail: (req, res) => res.redirect('/login')
+  },
+  checkUnauthenticated: {
+    onFail: (req, res) => res.redirect('/')
+  },
+});
+
+export default auth;

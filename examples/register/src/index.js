@@ -1,13 +1,10 @@
 import express, { json, urlencoded } from 'express';
 import session from 'express-session';
 import path from 'path';
-import {
-  authenticate, checkAuthenticated, checkUnauthenticated, init, logout
-} from 'hadrian';
 
-import './models';
+import { auth, register } from './models';
 
-const port = process.env.PORT || 3020;
+const PORT = process.env.PORT || 3020;
 
 // Make express app
 const app = express();
@@ -28,37 +25,32 @@ app.use(session({
 }));
 
 // Initialize hadrian on the request
-app.use(init());
+app.use(auth.init());
 
 // render home page if logged in
-app.get('/', checkAuthenticated(), (req, res) => res.render('home', { user: req.user }));
+app.get('/', auth.checkAuthenticated(), (req, res) => {
+  res.render('home', { user: req.user });
+});
 
 // render login page if not logged in
-app.get('/login', checkUnauthenticated(), (req, res) => res.render('login', { error: null }));
+app.get('/login', auth.checkUnauthenticated(), (req, res) => res.render('login', { error: null }));
 
 // render register page if not logged in
-app.get('/register', checkUnauthenticated(), (req, res) => res.render('register', { error: null }));
+app.get('/register', auth.checkUnauthenticated(), (req, res) => res.render('register', { error: null }));
 
 // logout if not logged in
-app.get('/logout', checkAuthenticated(), logout());
+app.get('/logout', auth.checkAuthenticated(), auth.logout(), (req, res) => { res.redirect('/login'); });
 
 // if logged out authenticate the user and login
-app.post('/login', checkUnauthenticated(), authenticate());
+app.post('/login', auth.checkUnauthenticated(), auth.authenticate(), (req, res) => { res.redirect('/'); });
 
 // if logged out register user using authenticate('password_register') and login
-app.post('/register', checkUnauthenticated(), authenticate('password_register'));
-
-// Use overrides when you want different fail and success responses for example this endpoint
-// sends a json response
-app.get('/api/getDate', checkAuthenticated({
-  onFail: { json: { error: 'You must be logged in to get the date' } },
-  onSuccess: (req, res) => res.json({ date: new Date() })
-}));
+app.post('/register', auth.checkUnauthenticated(), register.authenticate(), (req, res) => { res.render('success', { message: 'Registration successful', user: req.user }); });
 
 // listen for requests
-app.listen(port, () => {
+app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`Server successfully started on port ${port}`);
+  console.log(`Server successfully started on port ${PORT}`);
 }).on('error', (error) => {
   // eslint-disable-next-line no-console
   console.log('Error on server startup');

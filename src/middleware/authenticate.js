@@ -1,53 +1,50 @@
-import makeExtractor from '../options/makeExtractor';
-import makeResponder from '../options/makeResponder';
-import buildOptions from '../options/buildOptions';
+import makeExtractor from '../constructors/makeExtractor';
+import makeResponder from '../constructors/makeResponder';
 import saveSession from './saveSession';
 import init from './init';
-import { alwaysDeserializeAuth, manualDeserializeAuth } from '../options/deserializers';
+import { alwaysDeserializeAuth, manualDeserializeAuth } from '../misc/deserializers';
+import Fail from '../misc/Fail';
 
-const defaultFailed = 'Failed to verify';
-
-const authenticate = (modelName, overrides) => {
-  if (typeof modelName === 'object') {
-    overrides = modelName;
-    modelName = null;
-  }
-  const options = buildOptions(modelName, overrides, 'authenticate');
+const authenticate = (options) => {
+  const { clientType, name } = options;
   const {
-    verify, getUser, clientType, name
-  } = options;
-  const extract = makeExtractor(options.extract);
-  const onError = makeResponder(options.authenticateOnError, 'authenticateOnError');
-  const onFail = makeResponder(options.authenticateOnFail, 'authenticateOnFail');
-  const deserializer = options.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
+    verify, setUser
+  } = options.authenticate;
+  const getData = options.authenticate.getUser || options.authenticate.getData;
+  const extract = makeExtractor(options.authenticate.extract);
+  const onError = makeResponder(options.authenticate.onError, 'authenticate.onError');
+  const onFail = makeResponder(options.authenticate.onFail, 'authenticate.onFail');
+  const deserializer = options.sessions.deserializeTactic === 'always' ? alwaysDeserializeAuth : manualDeserializeAuth;
 
   const authFunction = (req, res, next) => {
-    extract(req, (error0, query, reason) => {
-      if (error0) return onError(req, res, error0);
-      if (!query) return onFail(req, res, reason || defaultFailed);
-      getUser(query, (error1, user, reason1) => {
-        if (error1) return onError(req, res, error1);
-        if (!user) return onFail(req, res, reason1 || defaultFailed);
-        verify(query, user, (error2, result, reason2) => {
-          if (error2) return onError(req, res, error2);
-          if (!result) return onFail(req, res, reason2 || defaultFailed);
-          req.hadrian.auth[name] = {
-            clientType, query, model: name, result
-          };
-          req.hadrian.isAuthenticated = true;
-          req.deserializedUser = user;
-          req.user = deserializer(user, req);
-          next();
-        }, req);
-      }, req);
+    const run = async () => {
+      const query = await extract(req);
+      if (!query) throw new Fail('Failed to authenticate');
+      const data = await getData(query, req);
+      if (!data) throw new Fail('Failed to authenticate');
+      const result = await verify(query, data, req);
+      if (!result) throw new Fail('Failed to authenticate');
+      const user = await setUser(query, data, req);
+      if (!user) throw new Fail('Failed to authenticate');
+      req.hadrian.auth[name] = {
+        clientType, query, model: name, result
+      };
+      req.hadrian.isAuthenticated = true;
+      req.deserializedUser = user;
+      req.user = deserializer(user, req);
+      next();
+    };
+    run().catch((err) => {
+      if (err.isFail) return onFail(req, res, next, err, err.reason);
+      onError(req, res, next, err);
     });
   };
 
   const middleware = [];
-  if (options.selfInit) middleware.push(init(options));
+  if (options.authenticate.selfInit) middleware.push(init(options));
   middleware.push(authFunction);
-  if (options.useSessions) middleware.push(saveSession(options));
-  if (options.authenticateOnSuccess) middleware.push(makeResponder(options.authenticateOnSuccess, 'authenticateOnSuccess'));
+  if (options.sessions.useSessions) middleware.push(saveSession(options, onError));
+  if (options.authenticate.onSuccess) middleware.push(makeResponder(options.authenticate.onSuccess, 'authenticate.onSuccess'));
   return middleware.length === 1 ? authFunction : middleware;
 };
 

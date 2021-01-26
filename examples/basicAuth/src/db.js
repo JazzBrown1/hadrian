@@ -2,14 +2,13 @@ const clients = {
   user: {
     id: 'user',
     secret: 'password',
-    someInfo: 'Is the only client',
-    otherInfo: 'Is not even real :('
+    someInfo: 'You are the only client',
+    otherInfo: 'The sky is blue'
   }
 };
 
-const findClientById = (id, cb) => {
-  if (!clients[id]) return cb(null, null);
-  cb(null, clients[id]);
-};
+const findClientById = (id) => new Promise((resolve) => {
+  setTimeout(() => resolve(clients[id] || null), 100);
+});
 
 export { clients, findClientById };

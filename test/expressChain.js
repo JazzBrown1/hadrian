@@ -2,7 +2,9 @@
 
 // to enable deep level flatten use recursion with reduce and concat
 function flatDeep(arr, d = 1) {
-  return d > 0 ? arr.reduce((acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val, d - 1) : val), [])
+  return d > 0
+    ? arr.reduce((acc, val) => acc.concat(Array.isArray(val)
+      ? flatDeep(val, d - 1) : val), [])
     : arr.slice();
 }
 
@@ -12,10 +14,11 @@ const expressChain = (input) => {
   const arr = flatDeep(input, Infinity);
   return (req, res, done) => {
     let index = 0;
-    const next = () => {
+    const next = (err) => {
+      if (err) return done(req, res, err);
       if (index < arr.length) {
         arr[index++](req, res, next);
-      } else done(req, res);
+      } else done(req, res, err);
     };
     next();
   };

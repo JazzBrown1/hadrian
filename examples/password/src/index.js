@@ -1,11 +1,14 @@
-import express, { json, urlencoded } from 'express';
+import express, { urlencoded } from 'express';
 import session from 'express-session';
 
-import {
-  authenticate, checkAuthenticated, checkUnauthenticated, init, logout
-} from 'hadrian';
+import auth from './password.model';
 
-import './password.model';
+const PORT = 3030;
+
+// Hadrian methods are tightly bounded so you can deconstruct your Auth object.
+const {
+  authenticate, checkAuthenticated, checkUnauthenticated, init, logout
+} = auth;
 
 // Make express app
 const app = express();
@@ -15,7 +18,6 @@ app.set('views', `${__dirname}/../ejs`);
 app.set('view engine', 'ejs');
 
 // Express body parser middleware
-app.use(json({ extended: false }));
 app.use(urlencoded({ extended: true }));
 
 // Express session middleware - don't use default sessions in production
@@ -29,30 +31,17 @@ app.use(session({
 app.use(init());
 
 // render home page if logged in
-app.get('/', checkAuthenticated(), (req, res) => {
-  // Manual deserialize tactic
-  req.user((err, user) => {
-    if (err) res.sendStatus(500);
-    res.render('home', { user });
-  });
-});
+app.get('/', checkAuthenticated(), (req, res) => { res.render('home', { user: req.user }); });
 
 // render login page if not logged in
-app.get('/login', checkUnauthenticated(), (req, res) => res.render('login', { error: res.locals.error }));
+app.get('/login', checkUnauthenticated(), (req, res) => res.render('login', { error: null }));
 
 // logout if not logged in
-app.get('/logout', checkAuthenticated(), logout());
+app.get('/logout', checkAuthenticated(), logout(), (req, res) => res.render('login', { error: null }));
 
 // if logged out authenticate the user and login
-app.post('/login', checkUnauthenticated(), authenticate());
+app.post('/login', checkUnauthenticated(), authenticate(), (req, res) => { res.render('home', { user: req.user }); });
 
-// Use overrides when you want different fail and success responses for example this endpoint
-// sends a json response
-app.get('/api/getDate', checkAuthenticated({
-  onFail: { json: { error: 'You must be logged in to get the date' } }
-}), (req, res) => {
-  res.json({ date: new Date() });
+app.listen(PORT, () => {
+  console.log(`Listening on port: ${PORT}`);
 });
-
-// listen for requests on port 3001 always use https in production
-app.listen(3030);
