@@ -133,7 +133,7 @@ describe('authenticate()', function () {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if verify passes error', function (done) {
+  it('onFail called if verify throws error', function (done) {
     const req = {
       body: {},
       session: {}
@@ -144,14 +144,14 @@ describe('authenticate()', function () {
       authenticate: {
         selfInit: true,
         onError: () => done(),
-        verify: (a, b, done2) => done2(true, false)
+        verify: () => { throw new Error('Test Error'); }
       }
     });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if getData passes error', function (done) {
+  it('onFail called if getData throws error', function (done) {
     const req = {
       body: {},
       session: {}
@@ -162,14 +162,14 @@ describe('authenticate()', function () {
       authenticate: {
         selfInit: true,
         onError: () => done(),
-        getData: (a, done2) => done2(true, false)
+        getData: () => { throw new Error('Test Error'); }
       }
     });
     expressChain(authenticate())(req, res, () => {
       throw new Error('This should never happen');
     });
   });
-  it('onFail called if extract passes error', function (done) {
+  it('onFail called if extract throws error', function (done) {
     const req = {
       body: {},
       session: {}
@@ -180,7 +180,79 @@ describe('authenticate()', function () {
       authenticate: {
         selfInit: true,
         onError: () => done(),
-        extract: (a, done2) => done2(true, false)
+        extract: () => { throw new Error('Test Error'); }
+      }
+    });
+    expressChain(authenticate())(req, res, () => {
+      throw new Error('This should never happen');
+    });
+  });
+  it('onFail called if extract passes falsy value', function (done) {
+    const req = {
+      body: {},
+      session: {}
+    };
+    const res = {};
+    const { authenticate } = new Model({
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        extract: () => false
+      }
+    });
+    expressChain(authenticate())(req, res, () => {
+      throw new Error('This should never happen');
+    });
+  });
+  it('onFail called if getData passes falsy value', function (done) {
+    const req = {
+      body: {},
+      session: {}
+    };
+    const res = {};
+    const { authenticate } = new Model({
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        getData: () => false
+      }
+    });
+    expressChain(authenticate())(req, res, () => {
+      throw new Error('This should never happen');
+    });
+  });
+  it('onFail called if verify passes falsy value', function (done) {
+    const req = {
+      body: {},
+      session: {}
+    };
+    const res = {};
+    const { authenticate } = new Model({
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        verify: () => false
+      }
+    });
+    expressChain(authenticate())(req, res, () => {
+      throw new Error('This should never happen');
+    });
+  });
+  it('onFail called if setUser passes falsy value', function (done) {
+    const req = {
+      body: {},
+      session: {}
+    };
+    const res = {};
+    const { authenticate } = new Model({
+      sessions: { useSessions: true },
+      authenticate: {
+        selfInit: true,
+        onFail: () => done(),
+        setUser: () => false
       }
     });
     expressChain(authenticate())(req, res, () => {

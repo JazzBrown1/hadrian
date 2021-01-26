@@ -1,10 +1,12 @@
 # Hadrian
 > Fast and versatile authentication middleware for Express.js.
 
-[![Version][npm-version]][npm-url]
-[![Dependencies][npm-dependencies]][npm-url]
-[![Coverage Status](https://coveralls.io/repos/github/JazzBrown1/hadrian/badge.svg?branch=master)](https://coveralls.io/github/JazzBrown1/hadrian?branch=master)
-[![Build Status](https://travis-ci.com/JazzBrown1/hadrian.svg?branch=master)](https://travis-ci.com/JazzBrown1/hadrian)
+![npm](https://img.shields.io/npm/v/hadrian)
+[![GitHub license](https://img.shields.io/github/license/JazzBrown1/hadrian)](https://github.com/JazzBrown1/hadrian/blob/master/LICENCE.txt)
+![Travis (.com)](https://img.shields.io/travis/com/JazzBrown1/hadrian)
+![Coveralls github](https://img.shields.io/coveralls/github/JazzBrown1/hadrian)
+![npm bundle size](https://img.shields.io/bundlephobia/min/hadrian)
+![GitHub last commit](https://img.shields.io/github/last-commit/JazzBrown1/hadrian)
 
 Hadrian is a flexible and dynamic authentication middleware for express.js. It has been designed to be easy to use, modular, unopinionated and take the complexities out of building authentication into server apps.
 
@@ -32,30 +34,23 @@ Create a new Model instance by calling new Model(options)
 
 You can provide a function for each of the authentication steps:
 
-- extract - (req) => query
+- extract - async (req) => query
 
-- getData - (query, req) => data
+- getUser - async (query, req) => user
 
-- verify - (query, data, req) => result
-
-- setUser - (query, data, result, req) => user
-
-The above can be synchronous or asynchronous functions.
+- verify - async (query, user, req) => result
 
 ```javascript
 import { Model, Fail } from 'hadrian';
 
+import { findUserByUserName } from './db';
+
 const auth = new Model({
   name: 'password',
   authenticate: {
-    extract: 'body',
-    getData: async (query) => {
-      const user = await findUserByUserName(query.username);
-      if (!user) throw new Fail('Unknown User');
-      return user;
-    },
-    verify: (query, data) => query.password && query.password === data.password,
-    setUser: (query, data) => data,
+    extract: (req) => req.body,
+    getUser: async (query) => findUserByUserName(query.username),
+    verify: (query, data) => query.password && query.password === data.password
   },
   sessions: {
     useSessions: true,
@@ -65,7 +60,7 @@ const auth = new Model({
 });
 ```
 
-The init() middleware must be called before any other authenitcation middleware and after parsing and sessions middleware(If sessions are required).
+The init() middleware must be called before any other authentication middleware and after parsing and sessions middleware(If sessions are required).
 
 ```javascript
 app.use(json({ extended: false }));
@@ -88,16 +83,16 @@ app.use('/login', auth.checkUnauthenticated(), auth.authenticate(), (req, res) =
 });
 ```
 
-You can block access to routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
+You can limit access to routes by using the checkAuthenticated() or checkUnauthenticated() middleware.
 
 ```javascript
 app.use('/api/private/', auth.checkAuthenticated({ onFail: { redirect: '/login' } }), privateApiRoutes);
 ```
 
-You can set default onFail handlers in the Authenitcation model.
+You can also set default handlers when creating the Authentication model.
 
 ```javascript
-{
+const auth = new Model({
   //............
   checkAuthenticated: {
     onFail: { redirect: '/login' }
@@ -105,24 +100,35 @@ You can set default onFail handlers in the Authenitcation model.
   checkUnauthenticated: {
     onFail: (req, res) => res.redirect('/home')
   }
-}
+})
  ```
-
-In the above example we redirect the user using the hadrian shorthand and the equivalent express api.
 
 You can use multiple authentication models in your app.
 
 ```javascript
 app.post(
-  '/login',
-  checkUnauthenticated('oauth-2'),
-  authenticate('oauth-2', {
-    onError:{ send: 'Error!' }
-  }),
-  (req, res) => {
-    res.redirect('home');
-  }
+  '/loginAuthOne',
+  authOne.checkUnauthenticated({ by: 'self' }),
+  authOne.authenticate()
 );
+
+app.post(
+  '/loginAuthTwo',
+  authTwo.checkUnauthenticated({ by: 'any' }),
+  authTwo.authenticate()
+);
+
+app.post(
+  'logoutAll',
+  authOne.logout({ of: 'all' })
+);
+
+app.post(
+  'logoutAuthOne',
+  authOne.logout({ of: 'self' })
+);
+
+//......
 ```
 
 _For working examples and usage, please refer to the [examples section on project Github](https://github.com/JazzBrown1/hadrian/tree/master/examples/)_

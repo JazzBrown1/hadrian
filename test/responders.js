@@ -11,7 +11,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -29,7 +29,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -48,7 +48,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -65,7 +65,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -84,7 +84,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -105,7 +105,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -126,7 +126,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -147,7 +147,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -166,7 +166,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -184,7 +184,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };
@@ -201,7 +201,7 @@ describe('responders', function () {
       hadrian: {
         isAuthenticated: true,
         auth: {
-          someProp: 'value'
+          [modelName]: 'value'
         }
       }
     };

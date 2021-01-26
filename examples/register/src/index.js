@@ -25,9 +25,7 @@ app.use(session({
 }));
 
 // Initialize hadrian on the request
-app.use(auth.init(), (req, res, n) => {
-  n();
-});
+app.use(auth.init());
 
 // render home page if logged in
 app.get('/', auth.checkAuthenticated(), (req, res) => {
@@ -41,20 +39,13 @@ app.get('/login', auth.checkUnauthenticated(), (req, res) => res.render('login',
 app.get('/register', auth.checkUnauthenticated(), (req, res) => res.render('register', { error: null }));
 
 // logout if not logged in
-app.get('/logout', auth.checkAuthenticated(), auth.logout());
+app.get('/logout', auth.checkAuthenticated(), auth.logout(), (req, res) => { res.redirect('/login'); });
 
 // if logged out authenticate the user and login
-app.post('/login', auth.checkUnauthenticated(), auth.authenticate());
+app.post('/login', auth.checkUnauthenticated(), auth.authenticate(), (req, res) => { res.redirect('/'); });
 
 // if logged out register user using authenticate('password_register') and login
-app.post('/register', auth.checkUnauthenticated(), register.authenticate());
-
-// Use overrides when you want different fail and success responses for example this endpoint
-// sends a json response
-app.get('/api/getDate', auth.checkAuthenticated({
-  onFail: { json: { error: 'You must be logged in to get the date' } },
-  onSuccess: (req, res) => res.json({ date: new Date() })
-}));
+app.post('/register', auth.checkUnauthenticated(), register.authenticate(), (req, res) => { res.render('success', { message: 'Registration successful', user: req.user }); });
 
 // listen for requests
 app.listen(PORT, () => {

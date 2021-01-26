@@ -25,24 +25,25 @@ const auth = new Model(
     authenticate: {
       extract: 'body',
       getUser: async (query) => query.username && findUserByUserName(query.username),
-      verify: (query, user) => user && pw.validate(query.password, user.password),
+      verify: (query, user) => pw.validate(query.password, user.password),
       onError: (req, res) => res.render('login', { error: 'internal server error' }),
       onFail: (req, res) => res.render('login', { error: 'Password or username did not match! Try again' }),
-      onSuccess: (req, res) => res.render('success', { message: 'Log in successful', user: req.user })
     },
     sessions: {
       useSessions: true,
       serialize,
       deserialize
     },
-    logout: {
-      onSuccess: { redirect: '/login' },
-    },
     checkAuthenticated: {
+      by: 'any',
       onFail: { redirect: '/login' }
     },
     checkUnauthenticated: {
+      by: 'any',
       onFail: { redirect: '/' }
+    },
+    logout: {
+      of: 'all'
     }
   }
 );
@@ -69,7 +70,6 @@ const register = new Model({
     },
     onError: (req, res) => res.render('register', { error: 'internal server error' }),
     onFail: (r, res, n, e, reason) => res.render('register', { error: reason }),
-    onSuccess: (req, res) => res.render('success', { message: 'Registration successful', user: req.user }),
   }
 });
 

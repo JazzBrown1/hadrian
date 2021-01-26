@@ -1,5 +1,7 @@
 const useExpressErrorHandler = (r, rr, next, err) => next(err || new Error('Server Error'));
+
 const send401 = { sendStatus: 401 };
+
 const _property = true;
 const _parent = true;
 
@@ -9,7 +11,7 @@ const schema = {
   sessions: {
     _parent,
     useSessions: { _property, types: ['boolean'], default: false },
-    deserializeTactic: { _property, enum: ['always', 'never', 'manual'], default: 'always' }, // enums in next ez-options release
+    deserializeTactic: { _property, enum: ['always', 'never', 'manual'], default: 'always' },
     serialize: { _property, types: ['function'], default: (user) => user },
     deserialize: { _property, types: ['function'], default: (user) => user },
   },
@@ -34,7 +36,7 @@ const schema = {
     _parent,
     onFail: { _property, types: ['function', 'object'], default: send401 },
     onSuccess: { _property, types: ['null', 'function', 'object'], default: null },
-    by: { _property, enum: ['any', 'self'], default: 'any' }
+    by: { _property, enum: ['any', 'self'], default: 'self' }
   },
   checkUnauthenticated: {
     _parent,

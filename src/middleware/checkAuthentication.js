@@ -1,7 +1,7 @@
 import makeResponder from '../constructors/makeResponder';
 
 const checkSelf = (name) => (req) => Boolean(req.hadrian.auth[name]);
-const checkAny = (req) => req.hadrian.isAuthenticated;
+const checkAny = (req) => Object.keys(req.hadrian.auth).length;
 
 const checkAuthentication = (options) => {
   // eslint-disable-next-line no-nested-ternary

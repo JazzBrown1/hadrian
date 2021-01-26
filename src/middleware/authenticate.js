@@ -3,6 +3,7 @@ import makeResponder from '../constructors/makeResponder';
 import saveSession from './saveSession';
 import init from './init';
 import { alwaysDeserializeAuth, manualDeserializeAuth } from '../misc/deserializers';
+import Fail from '../misc/Fail';
 
 const authenticate = (options) => {
   const { clientType, name } = options;
@@ -18,10 +19,13 @@ const authenticate = (options) => {
   const authFunction = (req, res, next) => {
     const run = async () => {
       const query = await extract(req);
+      if (!query) throw new Fail('Failed to authenticate');
       const data = await getData(query, req);
+      if (!data) throw new Fail('Failed to authenticate');
       const result = await verify(query, data, req);
-      if (!result) return onFail(req, res, next);
+      if (!result) throw new Fail('Failed to authenticate');
       const user = await setUser(query, data, req);
+      if (!user) throw new Fail('Failed to authenticate');
       req.hadrian.auth[name] = {
         clientType, query, model: name, result
       };

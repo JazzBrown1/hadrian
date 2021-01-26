@@ -1,14 +1,14 @@
 import express from 'express';
-import { authenticate } from 'hadrian';
 
-// Import authentication model
-import './basic-auth.model';
+import auth from './basic-auth.model';
+
+const PORT = 3040;
 
 // Make express app
 const app = express();
 
 // Authenticate the request - selfInit is set to true in the model so init() is omitted
-app.use(authenticate());
+app.use(auth.authenticate());
 
 // some endpoint
 app.get('/get-some-info', (req, res) => res.json({ result: req.user.someInfo }));
@@ -20,4 +20,6 @@ app.get('/get-other-info', (req, res) => res.json({ result: req.user.otherInfo }
 app.use('*', (req, res) => res.json({ error: 'unknown request' }));
 
 // listen for requests on port 3001 always use https in production
-app.listen(3040);
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
+});
