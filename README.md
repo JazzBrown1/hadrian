@@ -12,8 +12,6 @@ Hadrian is a flexible and dynamic authentication middleware for express.js. It h
 
 Hadrian simplifies authentication in express apps, removing unnecessary complexities while maintaining full flexibility to create and support any type of authentication strategy.
 
-Hadrian is Quick! By preprocessing the authentication models at time of start up, Hadrian is able to handle requests with maximum efficiency.
-
 ## Installation
 
 Ensure you have installed Express.js
@@ -50,7 +48,7 @@ const auth = new Model({
   authenticate: {
     extract: (req) => req.body,
     getUser: async (query) => findUserByUserName(query.username),
-    verify: (query, data) => query.password && query.password === data.password
+    verify: (query, user) => query.password && query.password === user.password
   },
   sessions: {
     useSessions: true,
